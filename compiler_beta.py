@@ -446,6 +446,7 @@ def midToSuffix(l):##
 			else:
 				while priority[i] > priority[symbols[-1][0]]:
 					ret.append(symbols.pop())
+				symbols.append((i,tp))
 	for i in reversed(symbols[1:]):
 		ret.append(i)
 	return ret
@@ -497,7 +498,7 @@ def assignr(x , reg, prefuncname, corvar):
 		param = name[name.find('[')+1:name.rfind(']')].strip()
 		dealExpression(param, '$a0', prefuncname, corvar)
 		realArrayName = corvar[arrayName].corname
-		outputln('lw %s,%s(%s)'%(reg, realArrayName, '%a0' ))
+		outputln('lw %s,%s(%s)'%(reg, realArrayName, '$a0' ))
 		pass
 	elif tp == 'const':
 		exp = x[0]

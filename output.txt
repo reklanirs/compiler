@@ -1,95 +1,118 @@
-int a
-void delay(int i, int j) 
-{
-int a[10]
-int c
-c= 30000
-i += ++c + 5
-while(c>0)
-{
-c=c - 1
-}
-i = a[5] + 3
-}
-void main(void)
-{
-int i,j,k
-int key
-key=0
-while(1)
-{
-key=key+1
-$0xfffffc00=key
-if(key>100)
-{
-key=0
-}
-else
-{
-if(key>10)
-{
-key = 1
-}
-else
-{
-key-=3
-}
-}
-delay(a+5)
-}
-for(int i=0; i< 5; i++)
-{
-if(i>3)
-{
-printf("hahaha")
-}
-}
-for(;;)
-{
-}
-}
-codelen: 50
-int a[10]
-int c
-c= 30000
-i += ++c + 5
-while(c>0)
-{
-c=c - 1
-}
-i = a[5] + 3
-tmp: 12
-"""""""""""""""""""""""""""""""""
-c 30000 = 
-i c ++ 5 += 
-c 0 > 
-c c 1 - = 
-i a[5] 3 + = 
-5 
-
-key 0 = 
-1 
-key key 1 + = 
-$0xfffffc00 key = 
-key 100 > 
-key 0 = 
-key 10 > 
-key 1 = 
-key 3 -= 
-delay(a+5) 
-i 3 > 
-printf("hahaha") 
-
-"""""""""""""""""""""""""""""""""
 delay
-	a   delay_a
-	i   $s1
-	c   $s0
-	j   $s2
-
 main
-	i   $s1
-	k   $s2
-	j   $s3
-	key   $s0
+	a sint32 32 1
+a[1] array a
+= symbol NoVtype
+1000 const sint32
+
+
+	assignr  ('1000', 'const', 'sint32') $a3
+	assignr  ('a[1]', 'array', 'a') $a2
+1 const sint32
+
+
+c variable sint08
+> symbol NoVtype
+0 const sint32
+
+
+	assignr  ('0', 'const', 'sint32') $a3
+	assignr  ('c', 'variable', 'sint08') $a2
+c variable sint08
+= symbol NoVtype
+c variable sint08
+- symbol NoVtype
+1 const sint32
+
+
+	assignr  ('1', 'const', 'sint32') $a3
+	assignr  ('c', 'variable', 'sint08') $a2
+	assignr  ('c', 'variable', 'sint08') $a2
+i variable sint32
+= symbol NoVtype
+a[5] array a
++ symbol NoVtype
+3 const sint32
+
+
+	assignr  ('3', 'const', 'sint32') $a3
+	assignr  ('a[5]', 'array', 'a') $a2
+5 const sint32
+
+
+	assignr  ('i', 'variable', 'sint32') $a2
+
+key variable sint32
+= symbol NoVtype
+0 const sint32
+
+
+	assignr  ('0', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+LED variable sint32
+= symbol NoVtype
+0xfffffc60 const sint32
+
+
+	assignr  ('0xfffffc60', 'const', 'sint32') $a3
+	assignr  ('LED', 'variable', 'sint32') $a2
+1 const sint32
+
+
+key variable sint32
+= symbol NoVtype
+key variable sint32
++ symbol NoVtype
+1 const sint32
+
+
+	assignr  ('1', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+	assignr  ('key', 'variable', 'sint32') $a2
+$ symbol NoVtype
+LED variable sint32
+= symbol NoVtype
+key variable sint32
+
+
+	assignr  ('LED', 'variable', 'sint32') $a2
+	assignr  ('key', 'variable', 'sint32') $a3
+key variable sint32
+> symbol NoVtype
+100 const sint32
+
+
+	assignr  ('100', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+key variable sint32
+= symbol NoVtype
+0 const sint32
+
+
+	assignr  ('0', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+key variable sint32
+> symbol NoVtype
+10 const sint32
+
+
+	assignr  ('10', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+key variable sint32
+= symbol NoVtype
+1 const sint32
+
+
+	assignr  ('1', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+key variable sint32
+-= symbol NoVtype
+3 const sint32
+
+
+	assignr  ('3', 'const', 'sint32') $a3
+	assignr  ('key', 'variable', 'sint32') $a2
+delay(a+5, k[2]) function void00
+
+
 
