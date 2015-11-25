@@ -41,7 +41,7 @@ priority = {
 '=':15
 }
 assign_operation = {
-'=':15, '+=':15, '-=':15, '*=':15, '/=':15, '%=':15	
+'=':15
 }
 operation_units = {
 '#':0,
@@ -708,10 +708,62 @@ def rassignrWithStyle(regto, regfrom, toVstyle = 'sint32', fromVstyle = 'sint32'
 		outputln('ori %s,%s,0'%(regto,regfrom))
 	elif tosize >= fromsize and toVstyle[0] == fromVstyle[0]:
 		outputln('ori %s,%s,0'%(regto,regfrom))
-	elif toVstyle[0] == fromVstyle[0]: ## s<-s, 填充符号位    u<-u, 填充0
+	elif tosize < fromsize and toVstyle[0] == 's' and fromVstyle[0] == 's': ## s<-s, 填充符号位
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('sra %s,%s,%d'%(regto,regto,num))
+		pass ##
+	elif tosize < fromsize and toVstyle[0] == 'u' and fromVstyle[0] == 'u': #填0	u<-u, 填充0
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('srl %s,%s,%d'%(regto,regto,num))
+	elif toVstyle == 's' and fromVstyle[0] == 'u' and toVstyle[-2:] == fromVstyle[-2:]: #s<-u
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('sra %s,%s,%d'%(regto,regto,num))
+	elif toVstyle == 'u' and fromVstyle[0] == 's' and toVstyle[-2:] == fromVstyle[-2:]: #u<-s
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('srl %s,%s,%d'%(regto,regto,num))
+	elif toVstyle == 's' and fromVstyle[0] == 'u' and int(toVstyle[-2:]) > int(fromVstyle[-2:]): #s<-u
+		outputln('ori %s,%s,0'%(regto,regfrom))
+	elif toVstyle == 's' and fromVstyle[0] == 'u' and int(toVstyle[-2:]) < int(fromVstyle[-2:]): #s<-u
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('sra %s,%s,%d'%(regto,regto,num))
+	elif toVstyle == 'u' and fromVstyle[0] == 's' and toVstyle[-2:] > fromVstyle[-2:]: #u<-s
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('sra %s,%s,%d'%(regto,regto,num))
+	elif toVstyle == 'u' and fromVstyle[0] == 's' and toVstyle[-2:] < fromVstyle[-2:]: #u<-s
+		outputln('ori %s,%s,0'%(regto,regfrom))
+		num = 32 - int(toVstyle[-2:])
+		outputln('sll %s,%s,%d'%(regto,regto,num))
+		outputln('srl %s,%s,%d'%(regto,regto,num))
+	pass
 
 
 
+
+
+
+
+
+def regFormat(reg, vtype):
+	if vtype[0] == 'u':
+		num = 32 - int(vtype[-2:])
+		outputln('sll %s,%s,%d'%(reg,reg,num))
+		outputln('srl %s,%s,%d'%(reg,reg,num))
+	elif vtype[0] == 's':
+		num = 32 - int(vtype[-2:])
+		outputln('sll %s,%s,%d'%(reg,reg,num))
+		outputln('sra %s,%s,%d'%(reg,reg,num))
 
 
 #@return  successful
@@ -857,39 +909,170 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 
 #@return  vtype of the ans
 def calc1((reg,vtype), oper, savereg):
+	ansvtype = ''
 	if oper == '!':
 		outputln('ori %s,$zero,1'%(savereg))
 		outputln('beq %s,$zero,1'%(reg))
 		outputln('ori %s,$zero,0'%(savereg))
+		ansvtype = vtype
 	elif oper == '~':
-		outputln('xor %s,%s,%s'%(savereg,reg,reg))
-	elif oper == '++':
-		outputln('addi %s,%s,1'%(reg,reg))
-		outputln('ori %s,%s,0'%(savereg,reg))
-	elif oper == '--':
-		outputln('addi %s,%s,-1'%(reg,reg))
-		outputln('ori %s,%s,0'%(savereg,reg))
+		outputln('nor %s,%s,%s'%(savereg,reg,reg))
+		regFormat(savereg, vtype)
+		ansvtype = vtype
 	elif oper == '`':
-		outputln('xor %s,%s,%s'%(savereg,reg,reg))
+		ansvtype = 's' + vtype[1:]
+		outputln('nor %s,%s,%s'%(savereg,reg,reg))
 		outputln('addi %s,%s,1'%(savereg,savereg))
+		regFormat(savereg, ansvtype)
 	else:
 		rassignr(savereg,'$zero')
-	pass
+		ansvtype = ''
+	return ansvtype
 
 
 
-
+"""
+priority = {
+'#':10000,
+'!':2, '~':2, '`':2,'$':2,
+'*':4, '/':4, '%':4,
+'+':5, '-':5,
+'<<':6, '>>':6,
+'<':7, '<=':7, '>':7, '>=':7,
+'==':8, '!=':8,
+'&':9,
+'^':10,
+'|':11,
+'&&':12,
+'||':13,
+'=':15
+}
+"""
 #@return  vtype of the ans
 def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
+	size = max(int(lvtype[-2:]), int(rvtype[-2:]))
+	ssize = str(size)
+		
+
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+
+		if lvtype[0] == 's' and rvtype[0] == 's':
+
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+
+
 	if oper == '*':
-		outputln('mult %s,%s'%(regl,regr))
-		outputln('mflo %s'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('multu %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'uint' + ssize)
+			return 'uint' + ssize
+		else:
+			outputln('mult %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
 	elif oper == '/':
-		outputln('div %s,%s'%(regl,regr))
-		outputln('mflo %s'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'uint' + ssize)
+			return 'uint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('div %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,5')##
+			#s为正
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			outputln('blez $zero,12')##
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regl,regl))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('divu %s,%s'%('$t0',regr))
+			outputln('mflo %s'%('$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('nor %s,%s,%s'%(savereg,'$t0','$t0'))
+			outputln('addi %s,%s,1'%(savereg,savereg))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regs, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,5')##
+			#s为正
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mflo %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			outputln('blez $zero,12')##
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regr,regr))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('divu %s,%s'%(regl, '$t0'))
+			outputln('mflo %s'%('$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('nor %s,%s,%s'%(savereg,'$t0','$t0'))
+			outputln('addi %s,%s,1'%(savereg,savereg))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
 	elif oper == '%':
-		outputln('div %s,%s'%(regl,regr))
-		outputln('mfhi %s'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mfhi %s'%(savereg))
+			regFormat(savereg, 'uint' + ssize)
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('div %s,%s'%(regl,regr))
+			outputln('mfhi %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,5')##
+			#s为正
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mfhi %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			outputln('blez $zero,9')##
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regl,regl))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('divu %s,%s'%('$t0',regr))
+			outputln('mfhi %s'%('$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('subu %s,%s,$t0'%(savereg, regr))
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regs, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,5')##
+			#s为正
+			outputln('divu %s,%s'%(regl,regr))
+			outputln('mfhi %s'%(savereg))
+			regFormat(savereg, 'sint' + ssize)
+			outputln('blez $zero,9')##
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regr,regr))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('divu %s,%s'%(regl, '$t0'))
+			outputln('mfhi %s'%('$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('add %s,%s,$t0'%(savereg, regr))
+		return rvtype
 	elif oper == '+':
 		outputln('add %s,%s,%s'%(savereg,regl,regr))
 	elif oper == '-':
@@ -944,24 +1127,6 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 		outputln('ori %s,$zero,0'%(savereg))
 	elif oper == '=':
 		outputln('ori %s,%s,0'%(regl,regr))
-		outputln('ori %s,%s,0'%(savereg,regl))
-	elif oper == '+=':
-		outputln('add %s,%s,%s'%(regl,regl,regr))
-		outputln('ori %s,%s,0'%(savereg,regl))
-	elif oper == '-=':
-		outputln('sub %s,%s,%s'%(regl,regl,regr))
-		outputln('ori %s,%s,0'%(savereg,regl))
-	elif oper == '*=':
-		outputln('mult %s,%s'%(regl,regr))
-		outputln('mflo ' + regl)
-		outputln('ori %s,%s,0'%(savereg,regl))
-	elif oper == '/=':
-		outputln('div %s,%s'%(regl,regr))
-		outputln('mflo ' + regl)
-		outputln('ori %s,%s,0'%(savereg,regl))
-	elif oper == '%=':
-		outputln('div %s,%s'%(regl,regr))
-		outputln('mfhi ' + regl)
 		outputln('ori %s,%s,0'%(savereg,regl))
 	else:
 		rassignr(savereg,'$zero')
