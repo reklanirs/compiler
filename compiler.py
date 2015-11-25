@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+﻿#!/usr/bin/python2.7
 # -*- coding: utf-8 -*- import requests
 import os
 import re
@@ -72,6 +72,7 @@ globalArray = []
 globalCodes = []
 
 functionNameList = []
+functionDict = {}
 functionReturnType = {}	
 functions = []
 
@@ -557,8 +558,8 @@ def readapart(s, prefuncname, corvar):
 	s = s.strip()
 	if s == '' or s == '(' or s == ')':
 		return s[0:1].strip(),s[1:].strip(),'parenthesis','NoVtype'
-	if re.match('[0-9]+$|0x[0-9a-fA-F]+$',s):
-		tmp = re.match('[-+]?[0-9]+$|[-+]?0x[0-9a-fA-F]+$',s).span()[1]
+	if re.match('[0-9]+\\b|0x[0-9a-fA-F]+\\b',s):
+		tmp = re.match('[-+]?[0-9]+\\b|[-+]?0x[0-9a-fA-F]+\\b',s).span()[1]
 		return s[:tmp],s[tmp:].strip(),'const','sint32'
 	elif re.match('[A-Za-z][A-Za-z0-9]*',s):
 		tmp = re.match('[A-Za-z][A-Za-z0-9]*',s).span()[1]
@@ -649,7 +650,7 @@ def readArrayInData(reg, realArrayName, arrayType, i):
 	if type(i) == int:
 		outputln('ori $t0,$zero,%d'%(i))
 		tmpReg = '$t0'
-	elif types(i) == str and i in register_name:
+	elif type(i) == str and i in register_name:
 		tmpReg = i
 
 	if arrayType == 'sint08':
@@ -750,11 +751,6 @@ def rassignrWithStyle(regto, regfrom, toVstyle = 'sint32', fromVstyle = 'sint32'
 
 
 
-
-
-
-
-
 def regFormat(reg, vtype):
 	if vtype[0] == 'u':
 		num = 32 - int(vtype[-2:])
@@ -773,11 +769,11 @@ def assignr(x , reg, prefuncname, corvar):
 	name = x[0]
 	tp = x[1]
 	vtype = x[2]
-	print '\tassignr ',x,reg
+	print 'assignr ',x,reg
 	if tp == 'function':
 		##prefuncname 调用  x[0] : funcName
-		##corvar      ---  functions[funcName].vardict
-		##params      传给  functions[funcName].params
+		##corvar      ---  functionDict[funcName].vardict
+		##params      传给  functionDict[funcName].params
 		funcName = name[:name.find('(')].strip()
 		params = name[name.find('(')+1:name.rfind(')')].strip()
 		if params == '':
@@ -785,12 +781,12 @@ def assignr(x , reg, prefuncname, corvar):
 		else:
 			params = [x.strip() for x in params.split(',')]
 		
-		if len(params) != len(functions[funcName].params):
+		if len(params) != len(functionDict[funcName].params):
 			throw_error(x)
 			return False
 
 		outputln('PUSHA ##'+prefuncname)
-		f = functions[funcName]
+		f = functionDict[funcName]
 		##开始传参数
 		for i in range(len(params)):
 			here = params[i]
@@ -816,7 +812,7 @@ def assignr(x , reg, prefuncname, corvar):
 				elif var.type == 1:
 					saveToArrayInData('$a0', aimRealName, aimVarType, 0)
 		#函数执行
-		outputln('jal ' + funcname)
+		outputln('jal ' + funcName)
 		#执行结束, 结果存于$v0
 
 		outputln('POPA ##' + prefuncname) #PUSHA, POPA操作不能动$v的值
@@ -875,7 +871,7 @@ def assignr(x , reg, prefuncname, corvar):
 				rassignr(reg, '$zero')
 			pass
 	elif tp == 'port':
-		##
+		###
 		pass
 	else:
 		throw_error(x[0])
@@ -930,39 +926,10 @@ def calc1((reg,vtype), oper, savereg):
 	return ansvtype
 
 
-
-"""
-priority = {
-'#':10000,
-'!':2, '~':2, '`':2,'$':2,
-'*':4, '/':4, '%':4,
-'+':5, '-':5,
-'<<':6, '>>':6,
-'<':7, '<=':7, '>':7, '>=':7,
-'==':8, '!=':8,
-'&':9,
-'^':10,
-'|':11,
-'&&':12,
-'||':13,
-'=':15
-}
-"""
 #@return  vtype of the ans
 def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 	size = max(int(lvtype[-2:]), int(rvtype[-2:]))
 	ssize = str(size)
-		
-
-		if lvtype[0] == 'u' and rvtype[0] == 'u':
-
-		if lvtype[0] == 's' and rvtype[0] == 's':
-
-		if lvtype[0] == 's' and rvtype[0] == 'u':
-
-		if lvtype[0] == 'u' and rvtype[0] == 's':
-
-
 	if oper == '*':
 		if lvtype[0] == 'u' and rvtype[0] == 'u':
 			outputln('multu %s,%s'%(regl,regr))
@@ -1007,7 +974,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 			regFormat(savereg, 'sint' + ssize)
 			return 'sint' + ssize
 		if lvtype[0] == 'u' and rvtype[0] == 's':
-			outputln('srl $t0,%s,%d'%(regs, int(rvtype[-2:]) - 1))
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
 			outputln('bne $t0,$zero,5')##
 			#s为正
 			outputln('divu %s,%s'%(regl,regr))
@@ -1055,7 +1022,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 			outputln('subu %s,%s,$t0'%(savereg, regr))
 		if lvtype[0] == 'u' and rvtype[0] == 's':
-			outputln('srl $t0,%s,%d'%(regs, int(rvtype[-2:]) - 1))
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
 			outputln('bne $t0,$zero,5')##
 			#s为正
 			outputln('divu %s,%s'%(regl,regr))
@@ -1074,41 +1041,148 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 			outputln('add %s,%s,$t0'%(savereg, regr))
 		return rvtype
 	elif oper == '+':
-		outputln('add %s,%s,%s'%(savereg,regl,regr))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('addu %s,%s,%s'%(savereg, regl, regr))
+			return 'uint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('add %s,%s,%s'%(savereg, regl, regr))
+			return 'sint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,4')
+			#s为正
+			outputln('addu %s,%s,%s'%(savereg,regl,regr))
+			regFormat(savereg, 'sint' + ssize)
+			outputln('blez $zero,7')
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regl,regl))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('subu %s,%s,%s'%(savereg,regr,'$t0'))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			return calc2((regr,rvtype), oper, (regl,lvtype), savereg)
 	elif oper == '-':
-		outputln('sub %s,%s,%s'%(savereg,regl,regr))
-	elif oper == '<<':
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('subu %s,%s,%s'%(savereg, regl, regr))
+			return 'uint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('sub %s,%s,%s'%(savereg, regl, regr))
+			return 'sint' + ssize
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			calc2((regr,rvtype), oper, (regl,lvtype), savereg)
+			outputln('nor %s,%s,%s'%(savereg,savereg,savereg))
+			outputln('addi %s,%s,1'%(savereg,savereg))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,4')
+			#s为正
+			outputln('subu %s,%s,%s'%(savereg, regl, regr))
+			regFormat(savereg, 'sint' + ssize)###前提为subu -1输出111111..
+			outputln('blez $zero,7')
+			#s为负
+			outputln('nor %s,%s,%s'%('$t0',regr,regr))
+			outputln('addi %s,%s,1'%('$t0','$t0'))
+			regFormat('$t0', 'uint' + ssize)
+
+			outputln('addu %s,%s,%s'%(savereg, regl, '$t0'))
+			regFormat(savereg, 'sint' + ssize)
+			return 'sint' + ssize
+	elif oper == '<<':  #左右移不能为负数
 		outputln('sllv %s,%s,%s'%(savereg,regl,regr))
-	elif oper == '>>':
-		outputln('srav %s,%s,%s'%(savereg,regl,regr))
+		return lvtype
+	elif oper == '>>':  #左右移不能为负数
+		if lvtype[0] == 'u':
+			outputln('srlv %s,%s,%s'%(savereg,regl,regr))
+		if lvtype[0] == 's':
+			outputln('srav %s,%s,%s'%(savereg,regl,regr))
+		return lvtype 
 	elif oper == '<':
-		outputln('sub $t0,%s,%s'%(regl,regr))
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('bltz $t0,1')
-		outputln('ori %s,$zero,0'%(savereg))
-	elif oper == '<=':
-		outputln('sub $t0,%s,%s'%(regl,regr))
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('blez $t0,1')
-		outputln('ori %s,$zero,0'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('sltu %s,%s,%s'%(savereg, regl, regr))
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('slt %s,%s,%s'%(savereg, regl, regr))
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,2')##
+			#s>=0
+			outputln('sltu %s,%s,%s'%(savereg, regl, regr))
+			outputln('blez $zero,1')
+			#s为负
+			outputln('ori %s,$zero,1'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,2')##
+			#s>=0
+			outputln('sltu %s,%s,%s'%(savereg, regl, regr))
+			outputln('blez $zero,1')
+			#s<0
+			outputln('ori %s,$zero,0'%(savereg))
+		return 'sint32'	
 	elif oper == '>':
-		outputln('sub $t0,%s,%s'%(regl,regr))
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('bgtz $t0,1')
-		outputln('ori %s,$zero,0'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 'u':
+			outputln('sltu %s,%s,%s'%(savereg, regr, regl))
+		if lvtype[0] == 's' and rvtype[0] == 's':
+			outputln('slt %s,%s,%s'%(savereg, regr, regl))
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,2')##
+			#s>=0
+			outputln('sltu %s,%s,%s'%(savereg, regr, regl))
+			outputln('blez $zero,1')
+			#s为负
+			outputln('ori %s,$zero,1'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,2')##
+			#s>=0
+			outputln('sltu %s,%s,%s'%(savereg, regr, regl))
+			outputln('blez $zero,1')
+			#s<0
+			outputln('ori %s,$zero,0'%(savereg))
+		return 'sint32'
+	elif oper == '<=':
+		calc2((regl,lvtype), '>', (regr,rvtype), savereg)
+		outputln('xor %s,%s,1'%(savereg))
+		return 'sint32'
 	elif oper == '>=':
-		outputln('sub $t0,%s,%s'%(regl,regr))
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('bgez $t0,1')
-		outputln('ori %s,$zero,0'%(savereg))
+		calc2((regl,lvtype), '<', (regr,rvtype), savereg)
+		outputln('xor %s,%s,1'%(savereg))
+		return 'sint32'
 	elif oper == '==':
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('beq %s,%s,1'%(regl,regr))
-		outputln('ori %s,$zero,0'%(savereg))
+		if lvtype[0] == rvtype[0]:
+			outputln('ori %s,$zero,1'%(savereg))
+			outputln('beq %s,%s,1'%(regl,regr))
+			outputln('ori %s,$zero,0'%(savereg))
+		if lvtype[0] == 's' and rvtype[0] == 'u':
+			outputln('srl $t0,%s,%d'%(regl, int(lvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,4')
+			#s为正
+			outputln('ori %s,$zero,1'%(savereg))
+			outputln('beq %s,%s,1'%(regl,regr))
+			outputln('ori %s,$zero,0'%(savereg))
+			outputln('blez $zero,1')
+			#s为负
+			outputln('ori %s,$zero,0'%(savereg))
+		if lvtype[0] == 'u' and rvtype[0] == 's':
+			outputln('srl $t0,%s,%d'%(regr, int(rvtype[-2:]) - 1))
+			outputln('bne $t0,$zero,4')
+			#s为正
+			outputln('ori %s,$zero,1'%(savereg))
+			outputln('beq %s,%s,1'%(regl,regr))
+			outputln('ori %s,$zero,0'%(savereg))
+			outputln('blez $zero,1')
+			#s为负
+			outputln('ori %s,$zero,0'%(savereg))
+		return 'sint32'		
 	elif oper == '!=':
-		outputln('ori %s,$zero,1'%(savereg))
-		outputln('bne %s,%s,1'%(regl,regr))
-		outputln('ori %s,$zero,0'%(savereg))
+		calc2((regl,lvtype), '==', (regr,rvtype), savereg)
+		outputln('xor %s,%s,1'%(savereg))
+		return 'sint32'
 	elif oper =='&':
 		outputln('and %s,%s,%s'%(savereg,regl,regr))
 	elif oper == '^':
@@ -1125,9 +1199,6 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 		outputln('bne %s,$zero,2'%(regl))
 		outputln('bne %s,$zero,1'%(regr))
 		outputln('ori %s,$zero,0'%(savereg))
-	elif oper == '=':
-		outputln('ori %s,%s,0'%(regl,regr))
-		outputln('ori %s,%s,0'%(savereg,regl))
 	else:
 		rassignr(savereg,'$zero')
 	pass
@@ -1136,12 +1207,14 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 def dealExpression(exp, saveto, prefuncname, corvar):
 	parts = toParts(exp, prefuncname, corvar)
+	
 	suffix = midToSuffix(parts)
 	ansvtype = ''
 
-	for i in parts:
-		print i[0],i[1],i[2]
+	for i in suffix:
+		print i[0],'#',i[1],'#',i[2]
 	print '\n'
+	
 	##calc mid and save to saveto
 
 	stack = []
@@ -1197,8 +1270,11 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 
 	
 	if not failFlag:
-		outputln('POP ' + saveto)
-		return stack[0]
+		i,tp,vtype = stack[0]
+		if tp == 'register':
+			outputln('POP ' + saveto)
+		else:
+			assignr(stack[0], saveto, prefuncname, corvar)
 	else:
 		for i in stack:
 			if i[1] == 'register':
@@ -1295,6 +1371,8 @@ for i in range(len(functions)):
 	if functions[i].name == '':
 		functions[i],functions[len(functions)-1] = swap(functions[i],functions[len(functions)-1])
 		functions = functions[:-1]
+	else:
+		functionDict[functions[i].name] = functions[i]
 	if i >= len(functions)-1:
 		break
 
@@ -1409,6 +1487,7 @@ outputln('addi $ra,$zero,END')
 outputln('j main\n')
 
 for f in functions:
+	outputln('####################### ' + f.name)
 	f.printcode()
 	print ''
 
