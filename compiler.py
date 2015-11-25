@@ -153,8 +153,10 @@ class Function(object):
 		if varstring != '' and varstring not in types:
 			for x in varstring.split(','):
 				x = x.strip()
-				name = x[:6].strip()
-				tp = x[6:].strip()
+				tp = x[:6].strip()
+				name = x[6:].strip()
+				if name.find('[') != -1:
+					name = name[:name.find('[')].strip()
 				self.params.append((name,tp))	
 
 		self.head = codes[0]
@@ -642,12 +644,74 @@ def midToSuffix(l):##
 
 
 
+def readArrayInData(reg, realArrayName, arrayType, i):
+	tmpReg = ''
+	if type(i) == int:
+		outputln('ori $t0,$zero,%d'%(i))
+		tmpReg = '$t0'
+	elif types(i) == str and i in register_name:
+		tmpReg = i
+
+	if arrayType == 'sint08':
+		outputln('lb %s,%s(%s)'%(reg, realArrayName, tmpReg))
+	elif arrayType == 'uint08':
+		outputln('lbu %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+	elif arrayType == 'sint16':
+		outputln('sll %s,%s,1'%(tmpReg,tmpReg))
+		outputln('lh %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+	elif arrayType == 'uint16':
+		outputln('sll %s,%s,1'%(tmpReg,tmpReg))
+		outputln('lhu %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+	else:
+		outputln('sll %s,%s,2'%(tmpReg,tmpReg))
+		outputln('lw %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+
+def saveToArrayInData(reg, realArrayName, arrayType, i):
+	tmpReg = ''
+	if type(i) == int:
+		if i == 0:
+			tmpReg = '$zero'
+		else:
+			outputln('ori $t0,$zero,%d'%(i))
+			tmpReg = '$t0'
+	elif types(i) == str and i in register_name:
+		tmpReg = i
+
+	if arrayType == 'sint08' or arrayType == 'uint08':
+		outputln('sb %s,%s(%s)'%(reg, realArrayName, tmpReg))
+	elif arrayType == 'sint16' or arrayType == 'uint16':
+		if not (type(i) == int and i == 0):
+			outputln('sll %s,%s,1'%(tmpReg,tmpReg))
+		outputln('sh %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+	else:
+		if not (type(i) == int and i == 0):
+			outputln('sll %s,%s,2'%(tmpReg,tmpReg))
+		outputln('sw %s,%s(%s)'%(reg, realArrayName, tmpReg ))
+
+
 #@return  successful
 def rassignr(regto, regfrom):
 	if regto not in register_name or regfrom not in register_name:
 		return False
 	outputln('ori %s,%s,0'%(regto,regfrom))
 	return True
+
+
+#@return  successful
+def rassignrWithStyle(regto, regfrom, toVstyle = 'sint32', fromVstyle = 'sint32'):
+	#variable_types = ['sint08','sint16','sint32','uint08','uint16','uint32']
+	if regto not in register_name or regfrom not in register_name or toVstyle not in variable_types or fromVstyle not in variable_types:
+		return False
+	tosize = int(toVstyle[-2:])
+	fromsize = int(fromVstyle[-2:])
+	if toVstyle == fromVstyle:
+		outputln('ori %s,%s,0'%(regto,regfrom))
+	elif tosize >= fromsize and toVstyle[0] == fromVstyle[0]:
+		outputln('ori %s,%s,0'%(regto,regfrom))
+	elif toVstyle[0] == fromVstyle[0]: ## s<-s, 填充符号位    u<-u, 填充0
+
+
+
 
 
 #@return  successful
@@ -659,6 +723,9 @@ def assignr(x , reg, prefuncname, corvar):
 	vtype = x[2]
 	print '\tassignr ',x,reg
 	if tp == 'function':
+		##prefuncname 调用  x[0] : funcName
+		##corvar      ---  functions[funcName].vardict
+		##params      传给  functions[funcName].params
 		funcName = name[:name.find('(')].strip()
 		params = name[name.find('(')+1:name.rfind(')')].strip()
 		if params == '':
@@ -666,57 +733,48 @@ def assignr(x , reg, prefuncname, corvar):
 		else:
 			params = [x.strip() for x in params.split(',')]
 		
-		outputln('PUSHA ##'+prefuncname)
-		for i in range(len(params)):
-			curparam = dealExpression(params[i].strip(), '$t0',  prefuncname, corvar)
-			print '\t',curparam
+		if len(params) != len(functions[funcName].params):
+			throw_error(x)
+			return False
 
-			corname = functions[funcName].varlist[i]
-			var = functions[funcName].vardict[corname]
-			if corvar[name].type > 1 and var.type > 1:
-				size = min(corvar[name].type, var.type)
+		outputln('PUSHA ##'+prefuncname)
+		f = functions[funcName]
+		##开始传参数
+		for i in range(len(params)):
+			here = params[i]
+			aimName, aimVarType = f.params[i]
+			aimRealName = f.vardict[aimName].corname
+			if here in corvar and corvar[here].type > 1 and f.vardict[aimName].type > 1: #传递整个数组
+				hereRealName = corvar[here].corname
+				hereVarType = corvar[here].vtype
+				size = f.vardict[aimName].type
 				for i in range(size):
-					outputln('ori $t1,$zero,%d'%(i))
-					outputln('lw $t0,%s(%s)'%(corvar[name].corname,'$t1'))
-					outputln('sw $t0,%s(%s)'%(var.corname,'$t1'))
-				pass
-			elif corvar[name].type > 1 or var.type > 1:
-				throw_error(x[0])
+					readArrayInData('$a0',hereRealName,hereVarType,i)
+					saveToArrayInData('$a0',aimRealName,aimVarType,i)
 				continue
-			else:
-				dealExpression(params[i], '$a0', prefuncname, corvar)
+			elif here in corvar and corvar[here].type > 1 or f.vardict[aimName].type > 1:
+				throw_error(x)
+				rassignr(reg, '$zero')
+				return
+			else: ##aim 必定是0 - reg, 1 - 内存的单个变量两种形式;
+				ansvtype = dealExpression(here, '$a0', prefuncname, corvar)
+				var = f.vardict[aimName]
 				if var.type == 0:
-					rassignr(var.corname,'$a0')
+					rassignrWithStyle(aimRealName, '$a0', var.vtype, ansvtype)
 				elif var.type == 1:
-					outputln('sw $a0,%s($zero)'%(var.corname))
-					pass
+					saveToArrayInData('$a0', aimRealName, aimVarType, 0)
+		#函数执行
 		outputln('jal ' + funcname)
-		outputln('POPA ##' + prefuncname)
+		#执行结束, 结果存于$v0
+
+		outputln('POPA ##' + prefuncname) #PUSHA, POPA操作不能动$v的值
 		rassignr('$v0', reg)
-		pass
 	elif tp == 'array':
 		arrayName = x[0][:name.find('[')].strip()
 		param = name[name.find('[')+1:name.rfind(']')].strip()
 		dealExpression(param, '$a0', prefuncname, corvar)
 		realArrayName = corvar[arrayName].corname
-		if vtype == 'sint08':
-			outputln('lb %s,%s(%s)'%(reg, realArrayName, '$a0'))
-			pass
-		elif vtype == 'uint08':
-			outputln('lbu %s,%s(%s)'%(reg, realArrayName, '$a0' ))
-			pass
-		elif vtype == 'sint16':
-			outputln('sll $a0,$a0,1')
-			outputln('lh %s,%s(%s)'%(reg, realArrayName, '$a0' ))
-			pass
-		elif vtype == 'uint16':
-			outputln('sll $a0,$a0,1')
-			outputln('lhu %s,%s(%s)'%(reg, realArrayName, '$a0' ))
-			pass
-		else:
-			outputln('sll $a0,$a0,2')
-			outputln('lw %s,%s(%s)'%(reg, realArrayName, '$a0' ))
-			pass
+		readArrayInData(reg, realArrayName, vtype, '$a0')
 	elif tp == 'const': # vtype must be sint32
 		exp = x[0]
 		realnum = 0
@@ -744,7 +802,7 @@ def assignr(x , reg, prefuncname, corvar):
 	elif tp == 'variable':
 		var = corvar[name]
 		if var.type == 0:
-			rassignr(var.corname, reg)
+			rassignr(reg, var.corname)
 		elif var.type == 1:
 			if vtype == 'sint08':
 				outputln('lb %s,%s(%s)'%(reg, var.corname, '$zero'))
@@ -758,7 +816,7 @@ def assignr(x , reg, prefuncname, corvar):
 			elif vtype == 'uint16':
 				outputln('lhu %s,%s(%s)'%(reg, var.corname, '$zero' ))
 				pass
-			else:
+			elif vtype.strip() == 'sint32' or vtype.strip() == 'uint32':
 				outputln('lw %s,%s(%s)'%(reg, var.corname, '$zero'))
 			else:
 				throw_error(name)
@@ -774,9 +832,27 @@ def assignr(x , reg, prefuncname, corvar):
 
 
 #@return  vtype of the ans
-def rassign((reg,vtype), x , prefuncname, corvar):
+def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 	#x : (name, tp, vtype)  tp must in ['array'(a[num]) ,  'variable', 'port']
-	pass
+	if tp == 'array':
+		arrayName = name[:name.find('[')].strip()
+		num = num[name.find('[')+1:name.rfind(']')].strip()
+		dealExpression(num, '$a0', prefuncname, corvar)
+		saveToArrayInData(reg, corvar[name].corname, vtype, '$a0')
+	elif tp == 'variable':
+		var = corvar[name]
+		realName = var.corname
+		if var.type == 0:
+			rassignrWithType(var.corname, reg, var.vtype, regvtype)
+		elif var.type == 1:
+			saveToArrayInData(reg, var.corname, var.vtype, 0)
+		else:
+			return ''
+	elif tp == 'port': ##
+		pass
+	else:
+		return ''
+	return vtype
 
 
 #@return  vtype of the ans
@@ -923,7 +999,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 				if ansvtype == '':
 					failFlag = throw_error(exp)
 					break
-				if not rassignr(saveto, rs):
+				if not rassignrWithStyle(saveto, rs, l[2], r[2]):
 					failFlag = throw_error(exp)
 					break
 			else:
@@ -1172,3 +1248,15 @@ for f in functions:
 
 outputln('END:')
 outputln('ENDSTART')
+
+for f in functions:
+	print f.name
+	for i,j in f.params:
+		print '\t',i,j,
+		cor = ''
+		if i.find('[') != -1:
+			i = i[:i.find('[')].strip()
+		var = f.vardict[i]
+		print var.corname,var.type,var.vtype
+
+
