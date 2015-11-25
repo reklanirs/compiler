@@ -7,17 +7,12 @@ a[1] array a
 
 
 	assignr  ('1000', 'const', 'sint32') $a3
-	assignr  ('a[1]', 'array', 'a') $a2
-1 const sint32
-
-
 c variable sint08
 > symbol NoVtype
 0 const sint32
 
 
 	assignr  ('0', 'const', 'sint32') $a3
-	assignr  ('c', 'variable', 'sint08') $a2
 c variable sint08
 = symbol NoVtype
 c variable sint08
@@ -26,8 +21,6 @@ c variable sint08
 
 
 	assignr  ('1', 'const', 'sint32') $a3
-	assignr  ('c', 'variable', 'sint08') $a2
-	assignr  ('c', 'variable', 'sint08') $a2
 i variable sint32
 = symbol NoVtype
 a[5] array a
@@ -36,11 +29,6 @@ a[5] array a
 
 
 	assignr  ('3', 'const', 'sint32') $a3
-	assignr  ('a[5]', 'array', 'a') $a2
-5 const sint32
-
-
-	assignr  ('i', 'variable', 'sint32') $a2
 
 key variable sint32
 = symbol NoVtype
@@ -48,14 +36,12 @@ key variable sint32
 
 
 	assignr  ('0', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
 LED variable sint32
 = symbol NoVtype
 0xfffffc60 const sint32
 
 
 	assignr  ('0xfffffc60', 'const', 'sint32') $a3
-	assignr  ('LED', 'variable', 'sint32') $a2
 1 const sint32
 
 
@@ -67,8 +53,6 @@ key variable sint32
 
 
 	assignr  ('1', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
-	assignr  ('key', 'variable', 'sint32') $a2
 $ symbol NoVtype
 LED variable sint32
 = symbol NoVtype
@@ -83,36 +67,37 @@ key variable sint32
 
 
 	assignr  ('100', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
 key variable sint32
 = symbol NoVtype
 0 const sint32
 
 
 	assignr  ('0', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
 key variable sint32
 > symbol NoVtype
 10 const sint32
 
 
 	assignr  ('10', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
 key variable sint32
 = symbol NoVtype
 1 const sint32
 
 
 	assignr  ('1', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
 key variable sint32
--= symbol NoVtype
+- symbol NoVtype
+= symbol NoVtype
 3 const sint32
 
 
-	assignr  ('3', 'const', 'sint32') $a3
-	assignr  ('key', 'variable', 'sint32') $a2
+	assignr  ('key', 'variable', 'sint32') $a3
 delay(a+5, k[2]) function void00
 
 
 
+delay
+	i sint32 $s4 0 sint32
+	j sint32 $s3 0 sint32
+	d sint32 delay_d 10 sint32
+main

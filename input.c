@@ -1,5 +1,5 @@
 int a;
-void delay(int i, int j) {
+void delay(int i, int j, int d[10]) {
 	int a[10];
 	short s;
 	char c;
@@ -33,3 +33,4 @@ int main(void)
 		delay(a+5, k[2]);
 	}
 }
+
