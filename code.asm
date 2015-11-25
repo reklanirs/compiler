@@ -39,10 +39,10 @@ main_while_start_0:
 POP $t0
 beq $t0,$zero,main_while_end_0
 ori $a3,$zero,1
-ori $s1,$a2,0
+ori $a2,$s1,0
 ori $v1,$zero,0
 PUSH $v1
-ori $s2,$a3,0
+ori $a3,$s2,0
 POP $t0
 main_if_start_1:
 ori $a3,$zero,100
@@ -60,7 +60,7 @@ j main_ifelse_end_2
 main_if_end_2:
 
 main_else_start_2:
-ori $s2,$a3,0
+ori $a3,$s2,0
 main_else_end_2:
 main_ifelse_end_2:
 
