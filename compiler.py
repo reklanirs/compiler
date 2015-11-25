@@ -878,6 +878,7 @@ def calc1((reg,vtype), oper, savereg):
 
 
 
+
 #@return  vtype of the ans
 def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 	if oper == '*':
