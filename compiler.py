@@ -871,8 +871,13 @@ def assignr(x , reg, prefuncname, corvar):
 				rassignr(reg, '$zero')
 			pass
 	elif tp == 'port':
-		###
-		pass
+		var = corvar[name]
+		if var.type == 0:
+			outputln('lw %s,0(%s)'%(reg,var.corname))
+		elif var.type == 1:
+			outputln('lw $t0,%s($zero)'%(var.corname))
+			outputln('lw %s,0(%s)'%(reg, '$t0'))
+
 	else:
 		throw_error(x[0])
 		rassignr(reg, '$zero')
@@ -897,7 +902,12 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		else:
 			return ''
 	elif tp == 'port': ##
-		pass
+		var = corvar[name]
+		if var.type == 0:
+			outputln('sw %s,0(%s)'%(reg,var.corname))
+		elif var.type == 1:
+			outputln('lw $t0,%s($zero)'%(var.corname))
+			outputln('sw %s,0(%s)'%(reg, '$t0'))
 	else:
 		return ''
 	return vtype
