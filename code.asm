@@ -17,7 +17,6 @@ START:
 addi $ra,$zero,END
 j main
 
-####################### delay
 delay_begin:
 ori $a3,$zero,1000
 delay_while_start_0:
@@ -30,7 +29,6 @@ delay_while_end_0:
 ori $a3,$zero,3
 ori $v0,$zero,0
 jr $ra
-####################### main
 main_begin:
 ori $a3,$zero,0
 ori $a3,$zero,65535
