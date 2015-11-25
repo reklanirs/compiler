@@ -1,5 +1,5 @@
 int a;
-void delay(int i, int j, int d[10]) {
+void delay(int i, int j) {
 	int a[10];
 	short s;
 	char c;
@@ -28,7 +28,7 @@ int main(void)
 		*LED=key;
 		if(key>100) key=0;
 		else if(key>10)key = 1;
-		else key-=3;
+		else key=key-3;
 
 		delay(a+5, k[2]);
 	}
