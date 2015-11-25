@@ -1497,7 +1497,6 @@ outputln('addi $ra,$zero,END')
 outputln('j main\n')
 
 for f in functions:
-	outputln('####################### ' + f.name)
 	f.printcode()
 	print ''
 
