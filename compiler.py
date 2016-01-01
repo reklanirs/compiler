@@ -1494,7 +1494,7 @@ for f in functions:
 outputln('\n.code')
 outputln('START:')
 outputln('addi $ra,$zero,END')
-outputln('j main\n')
+outputln('j main_begin\n')
 
 for f in functions:
 	f.printcode()
