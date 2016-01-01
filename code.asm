@@ -15,7 +15,7 @@ main_k .word 0 0 0
 .code
 START:
 addi $ra,$zero,END
-j main
+j main_begin
 
 delay_begin:
 ori $a3,$zero,1000
