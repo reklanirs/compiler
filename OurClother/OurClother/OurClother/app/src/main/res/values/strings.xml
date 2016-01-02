@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">衣镜</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_bodyctivity">Bodyctivity</string>
+    <string name="OK">确定</string>
+    <string name="body">请输入身材数据</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="myclother">衣服</string>
+    <string name="myshop">店铺</string>
+    <string name="reg">注册</string>
+    <string name="title">我的衣箱</string>
+    <string name="title_activity_my_show">MyShowActivity</string>
+    <string name="title_activity_my_body">MyBodyActivity</string>
+    <string name="change">修改数据</string>
+    <string name="tryputon">试穿</string>
+    <string name="findshop">寻找店铺</string>
+    <string name="mycenter">我的中心</string>
+    <string name="collected">收藏</string>
+    <string name="home_1">店铺</string>
+    <string name="home_2">收藏</string>
+    <string name="home_3">中心</string>
+    <string name="title_activity_register">RegisterActivity</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="login_account_null">登录账号不能为空</string>
+    <string name="login_password_null">登录密码不能为空</string>
+    <string name="login_email_null">邮箱不能为空</string>
+    <string name="login_email_invalid">邮箱格式不合法</string>
+    <string name="login_gender_null">请选择您的性别</string>
+    <string name="login_accept_no">您必须同意注册条款</string>
+    <string name="bodyData_height_null">身高不能为空</string>
+    <string name="bodyData_weight_null">体重不能为空</string>
+    <string name="bodyData_shoulder_null">肩宽不能为空</string>
+    <string name="bodyData_chest_null">胸围不能为空</string>
+    <string name="bodyData_waist_null">腰围不能为空</string>
+    <string name="bodyData_hip_null">臀围不能为空</string>
+    <string name="bodyData_trouser_null">裤长不能为空</string>
+
+</resources>

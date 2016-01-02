@@ -1,0 +1,99 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".LoadActivity"
+    android:background="@drawable/background"
+    >
+
+    <RelativeLayout
+        android:id="@+id/R1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dip"
+        android:background="@drawable/background_div"
+        android:layout_marginBottom="30dip"
+        android:layout_marginLeft="15dip"
+        android:layout_marginTop="45dip"
+        android:layout_marginRight="15dip">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/user_name"
+            android:textSize="30sp"
+            android:textColor="#444"
+            android:id="@+id/textView"
+            android:layout_marginTop="10dp"/>
+
+        <EditText
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="请输入用户名"
+            android:id="@+id/userNameText"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/textView"
+            android:singleLine="true"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="密码"
+            android:textSize="30sp"
+            android:textColor="#444"
+            android:id="@+id/textView2"
+            android:layout_below="@id/userNameText"
+            android:layout_marginTop="15dip"/>
+
+        <EditText
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:password="true"
+            android:hint="请输入密码"
+            android:singleLine="true"
+            android:id="@+id/passWordText"
+            android:layout_below="@id/textView2"
+            android:layout_marginTop="10dp"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/OK"
+            android:textSize="30sp"
+            android:id="@+id/okButton"
+            android:layout_below="@id/passWordText"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/background_div"
+            android:paddingRight="30dip"
+            android:paddingLeft="30dip"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/reg"
+            android:textSize="30dip"
+            android:id="@+id/regButton"
+            android:layout_marginTop="10dp"
+            android:layout_below="@id/passWordText"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/background_div"
+            android:paddingRight="30dip"
+            android:paddingLeft="30dip"/>
+     </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:src="@drawable/cat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+</LinearLayout>
