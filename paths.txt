@@ -1,0 +1,7 @@
+d:\\code.asm
+d:\\prog.coe
+d:\\mem.coe
+d:\\memblk0.coe
+d:\\memblk1.coe
+d:\\memblk2.coe
+d:\\memblk3.coe
