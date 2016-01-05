@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<!--设置字符渲染,防止乱码-->
+
+	<meta name="keywords" content="gui,2015-10-21,html">
+	<meta name="author" content="tang zhihao">
+	<meta name="generator" content="notepad++ 6.7.9">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<link rel="shortcut icon" href="https://www.bing.com/s/a/bing_p.ico" type="image/x-icon" />
+	<!--加图标-->
+	<title>GUI v0.1</title>
+	<style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+    }
+
+    #editor {
+        margin: 0;
+        position: absolute;
+        top: 188px;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+    }
+	</style>
+</head>
+<body>
+
+<div id="editor">#include<iostream>
+using namespace std;
+
+int main(){
+	cout<<"hello world! by TZH";
+	return 0;
+}
+</div>
+
+<script src="js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/chrome");
+    editor.session.setMode("ace/mode/c_cpp");
+	
+	function submitcode(){
+		var codes={};
+		codes=window.editor.session.toString();
+	}
+	function resetcode(){
+		window.editor.setValue("");
+	}
+</script>
+
+
+
+<div>
+<form enctype="multipart/form-data" action="php/upload.php" method="post">
+<label for="main picture">上传bit流文件:</label>
+<input type="file" id="mainPic" name="mainPic"/>
+<br/>
+<input type="submit">
+<input type="reset">
+</form>
+</div>
+
+<hr/>
+<div>
+<input type="button" value="SubmitCode" onclick="submitcode()">
+<input type="button" value="EmptyCode" onclick="resetcode()">
+</div>
+
+</body>
+</html>
