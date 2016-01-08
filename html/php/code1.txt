@@ -1,0 +1,6 @@
+sint32 main(void00)
+{
+sint32 a
+a=0
+return 0
+}
