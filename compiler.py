@@ -91,6 +91,10 @@ def outputln(s):
 	outputcode.write('\n')
 	outputcode.flush()
 
+def errorputln(s):
+	errorlog.write(s)
+	errorlog.write('\n')
+	errorlog.flush()
 
 
 class Variable(object):
@@ -470,6 +474,12 @@ def scanVarible(codes, allcodes):
 
 
 def dealCodes(funcname, codes, corvar, loopnum):
+	#throw_error('dealCodes:'+codes[0])
+	#18
+	for i,j in corvar.items():
+		print i + ':' + j.corname
+	print ''
+
 	dealedLineNum = -1
 	for linenum in range(len(codes)):
 		if linenum <= dealedLineNum:
@@ -482,6 +492,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 			tmp = s[6:].strip()
 			if tmp != '':
 				dealExpression(tmp, '$v0', funcname, corvar)
+				#throw_error('tmp:'+tmp)
 			outputln('jr $ra')
 			pass
 		elif re.match('^while(.+)$',s):
@@ -761,7 +772,7 @@ def regFormat(reg, vtype):
 		outputln('sll %s,%s,%d'%(reg,reg,num))
 		outputln('sra %s,%s,%d'%(reg,reg,num))
 
-
+#assign the value in x to reg
 #@return  successful
 def assignr(x , reg, prefuncname, corvar):
 	# x[0] : name x[1] : type   x[2] : variable_type (['void00','sint08','sint16','sint32','uint08','uint16','uint32'])
@@ -881,9 +892,10 @@ def assignr(x , reg, prefuncname, corvar):
 	else:
 		throw_error(x[0])
 		rassignr(reg, '$zero')
-	pass
+	return True
 
 
+#save the value in reg to the (name,tp,vtype)
 #@return  vtype of the ans
 def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 	#x : (name, tp, vtype)  tp must in ['array'(a[num]) ,  'variable', 'port']
@@ -896,7 +908,7 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		var = corvar[name]
 		realName = var.corname
 		if var.type == 0:
-			rassignrWithType(var.corname, reg, var.vtype, regvtype)
+			rassignrWithStyle(var.corname, reg, var.vtype, regvtype)
 		elif var.type == 1:
 			saveToArrayInData(reg, var.corname, var.vtype, 0)
 		else:
@@ -1216,6 +1228,9 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 
 def dealExpression(exp, saveto, prefuncname, corvar):
+	#18
+	print 'exp:',exp
+
 	parts = toParts(exp, prefuncname, corvar)
 	
 	suffix = midToSuffix(parts)
@@ -1230,18 +1245,25 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 	stack = []
 	failFlag = 0
 	for i,tp,vtype in suffix:
+		print 'i,tp,vtype:',i,tp,vtype
 		if tp == 'function' or tp == 'array' or tp == 'const' or tp == 'variable' or tp == 'port':
 			stack.append((i,tp,vtype))
 		elif tp == 'symbol' and operation_units[i] == 2:
 			r = stack.pop()
+			l = stack.pop()
+			print 'r:',r
+			print 'l:',l
+
 			rs = '$a3'
 			if r[1] == 'register': ##if the tp is register, it must be a value calculated and pushed before
 									##but the value in reg may be replaced, so we must pop from stack to get the value
 				outputln('POP ' + rs)
 			else:
 				if not assignr(r,rs,prefuncname, corvar):
+					print 'error: if not assignr(r,rs,prefuncname, corvar):'
 					failFlag = throw_error(exp)
 					break
+
 
 			if i in assign_operation:
 				ansvtype = rassign((rs, r[2]), l, prefuncname, corvar)
@@ -1252,7 +1274,6 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 					failFlag = throw_error(exp)
 					break
 			else:
-				l = stack.pop()
 				ls = '$a2'
 				if l[1] == 'register':
 					outputln('POP ' + ls)
@@ -1514,3 +1535,6 @@ for f in functions:
 		print var.corname,var.type,var.vtype
 
 
+for i in error_strings:
+	errorlog.write(i + '\n')
+errorlog.flush()
