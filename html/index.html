@@ -17,12 +17,19 @@
         overflow: hidden;
     }
 	
+	.footer {
+	text-align: center;
+	font-family:'微软雅黑';
+	  line-height: 40px;
+	  padding-bottom: 10px;
+	  margin-top: 40px;
+	}
     #editor {
-		width: 50%;
+		width: 80%;
         margin: 0;
         position: absolute;
-        top: 50px;
-        bottom: 10px;
+        top: 100px;
+        bottom: 0px;
         left: 0;
     }
 	</style>
@@ -71,10 +78,13 @@
 			alert("您的浏览器不支持AJAX！");  
 			return 0;  
 		}  
+		var url = 'php/code.php';
+		if(window.changebtn.value=="ASM!"){
+			url = 'php/asm.php';
+		}
 		  
-		var url = 'php/code.php';  
 		var postData = "";  
-		postData = "code=" + codes; 
+		postData = "code=" + codes;
 		  
 		xmlHttp.open("POST", url, true);  
 		xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");  
@@ -85,14 +95,26 @@
 				}  
 			}  
 		}  
-		xmlHttp.send(postData);  
+		xmlHttp.send(postData);
 		
 		alert("下载将在3秒后开始！");
-		setTimeout("download()",3000);
+		setTimeout("download()",5000);
 	}
 	
 	function download(){
 		window.location.replace("download.php");
+	}
+	
+	function changecode(){
+		var btnstr = window.changebtn.value;
+		if(btnstr=="MiniC!"){
+			window.changebtn.value="ASM!"
+			editor.session.setMode("ace/mode/assembly_x86");
+		}
+		else{
+			window.changebtn.value="MiniC!"
+			editor.session.setMode("ace/mode/c_cpp");
+		}
 	}
 	
 	function resetcode(){
@@ -115,9 +137,12 @@
 
 <hr/>
 <div>
-<input type="button" value="SubmitCode" onclick="submitcode()">
-<input type="button" value="EmptyCode" onclick="resetcode()">
+<input id="submitbtn" type="button" value="SubmitCode" onclick="submitcode()">
+<input id="emptybtn" type="button" value="EmptyCode" onclick="resetcode()">
+<input id="changebtn" type="button" value="MiniC!" onclick="changecode()">
 </div>
-
+<p id="footer">Copyright © 2015 
+<a href="https://github.com/reklanirs/compiler">Github</a>
+</p>
 </body>
 </html>

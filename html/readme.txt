@@ -1,11 +1,10 @@
-ä»index.htmlè¯»å–ä»£ç 
+´Óindex.html¶ÁÈ¡´úÂë
 
-phpå­˜ä¸ºimput.c
+php´æÎªimput.c
 
-è°ƒç”¨compiler.py
+µ÷ÓÃcompiler.py
 
-æ‰§è¡Œç”Ÿæˆcode.asm
+Ö´ĞĞÉú³Écode.asm
 
-ç¼ºæ£€æµ‹error
+¼ì²âerror
 
-ç”Ÿæˆcoeå‹ç¼©åŒ…

@@ -79,6 +79,17 @@ functions = []
 def swap(a,b):
 	return b,a
 
+def get_cur_info():
+    """Return the frame object for the caller's stack frame."""
+    try:
+        raise Exception
+    except:
+        f = sys.exc_info()[2].tb_frame.f_back
+    ret = '(' + str(f.f_code.co_name) + ',' + str(f.f_lineno) + ') '
+    #return (f.f_code.co_name, f.f_lineno)
+    return ret
+
+
 def throw_error(s):
 	global error_strings
 	error_strings.append(s)
@@ -91,7 +102,22 @@ def outputln(s):
 	outputcode.write('\n')
 	outputcode.flush()
 
+def errorputln(s):
+	errorlog.write(s)
+	errorlog.write('\n')
+	errorlog.flush()
 
+def find_in_raw_code(s):
+	l = []
+	for i in range(len(raw)):
+		if raw[i].find(s)!=-1:
+			l.append(i)
+	if len(l) == 0:
+		return '?'
+	ret = ''
+	for i in l:
+		ret += "/%d"%(i)
+	return ret[1:]
 
 class Variable(object):
 	"""docstring for Variable
@@ -140,7 +166,7 @@ class Function(object):
 		tmp = self.codes[0]
 		name = tmp[tmp.find(' ')+1:tmp.find('(')].strip()
 		if name == '':
-			throw_error(codes[0])
+			throw_error(get_cur_info() + codes[0])
 		varstring = tmp[tmp.find('(')+1:tmp.rfind(')')].strip()
 
 		self.name = name
@@ -441,16 +467,16 @@ def scanVarible(codes, allcodes):
 		if '(' in s or '}' in s or s[:s.find(' ')].strip() not in variable_types:
 			break
 		if name == '':
-			throw_error(s)
+			throw_error(get_cur_info() + s)
 		tmp = re.match('[A-Za-z][A-Za-z0-9]*[ \\t]*([ \\t]*,[ \\t]*([A-Za-z][A-Za-z0-9]*))*[ \\t]*;?',name)
-		if tmp == None or tmp.span()[1] != len(s):
+		if tmp == None or tmp.span()[1] != len(name):
 			if name.find('[') == -1:
-				throw_error(s)
+				throw_error(get_cur_info() + s)
 
 		tmp = [x.strip() for x in name.split(',')]
 		for v in tmp:
 			if v in reserved_word:
-				throw_error(s)
+				throw_error(get_cur_info() + s)
 				break
 			elif v.find('[') == -1:
 				variables.append((v,tp))
@@ -470,6 +496,12 @@ def scanVarible(codes, allcodes):
 
 
 def dealCodes(funcname, codes, corvar, loopnum):
+	#throw_error(get_cur_info() + 'dealCodes:'+codes[0])
+	#18
+	for i,j in corvar.items():
+		print i + ':' + j.corname
+	print ''
+
 	dealedLineNum = -1
 	for linenum in range(len(codes)):
 		if linenum <= dealedLineNum:
@@ -482,6 +514,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 			tmp = s[6:].strip()
 			if tmp != '':
 				dealExpression(tmp, '$v0', funcname, corvar)
+				#throw_error(get_cur_info() + 'tmp:'+tmp)
 			outputln('jr $ra')
 			pass
 		elif re.match('^while(.+)$',s):
@@ -492,7 +525,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 			body,curnum = findCurlyContent(codes[linenum:])
 			dealedLineNum = linenum + curnum
 			if state == '':
-				throw_error(s)
+				throw_error(get_cur_info() + s)
 				continue
 
 			outputln(beginLabel + ':')
@@ -513,7 +546,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 			body,curnum = findCurlyContent(codes[linenum:])
 			dealedLineNum = linenum + curnum
 			if state == '':
-				throw_error(s)
+				throw_error(get_cur_info() + s)
 				continue
 
 			outputln(ifbeginLabel + ':')
@@ -531,7 +564,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 				body,curnum = findCurlyContent(codes[dealedLineNum + 1:])
 				dealedLineNum += curnum
 				if state == '':
-					throw_error(s)
+					throw_error(get_cur_info() + s)
 					continue
 
 				outputln(elsebeginLabel + ':')
@@ -585,7 +618,11 @@ def readapart(s, prefuncname, corvar):
 						return s[:i+1],s[i+1:].strip(),'array',arrayName
 		else:
 			vname = s[:tmp].strip()
-			return vname,s[tmp:].strip(),'variable',corvar[vname].vtype
+			if vname not in corvar:
+				throw_error(get_cur_info() + s)
+				return '','','NoType','NoVtype'
+			else:
+				return vname,s[tmp:].strip(),'variable',corvar[vname].vtype
 	elif s[0] in '+-*/=<>!&|^~$':
 		i = 0
 		while i < len(s) and s[:i+1] in priority:
@@ -601,7 +638,8 @@ def toParts(s, prefuncname, corvar):
 	ret = []
 	while len(s) > 0:
 		tmp = readapart(s, prefuncname, corvar)
-		ret.append((tmp[0],tmp[2],tmp[3]))
+		if tmp[0] != '':
+			ret.append((tmp[0],tmp[2],tmp[3]))
 		s = tmp[1].strip()
 	for i in range(len(ret)):
 		if ret[i][0] == '-':
@@ -747,7 +785,7 @@ def rassignrWithStyle(regto, regfrom, toVstyle = 'sint32', fromVstyle = 'sint32'
 		num = 32 - int(toVstyle[-2:])
 		outputln('sll %s,%s,%d'%(regto,regto,num))
 		outputln('srl %s,%s,%d'%(regto,regto,num))
-	pass
+	return True
 
 
 
@@ -761,7 +799,7 @@ def regFormat(reg, vtype):
 		outputln('sll %s,%s,%d'%(reg,reg,num))
 		outputln('sra %s,%s,%d'%(reg,reg,num))
 
-
+#assign the value in x to reg
 #@return  successful
 def assignr(x , reg, prefuncname, corvar):
 	# x[0] : name x[1] : type   x[2] : variable_type (['void00','sint08','sint16','sint32','uint08','uint16','uint32'])
@@ -782,7 +820,7 @@ def assignr(x , reg, prefuncname, corvar):
 			params = [x.strip() for x in params.split(',')]
 		
 		if len(params) != len(functionDict[funcName].params):
-			throw_error(x)
+			throw_error(get_cur_info() + x)
 			return False
 
 		outputln('PUSHA ##'+prefuncname)
@@ -801,7 +839,7 @@ def assignr(x , reg, prefuncname, corvar):
 					saveToArrayInData('$a0',aimRealName,aimVarType,i)
 				continue
 			elif here in corvar and corvar[here].type > 1 or f.vardict[aimName].type > 1:
-				throw_error(x)
+				throw_error(get_cur_info() + x)
 				rassignr(reg, '$zero')
 				return
 			else: ##aim 必定是0 - reg, 1 - 内存的单个变量两种形式;
@@ -867,7 +905,7 @@ def assignr(x , reg, prefuncname, corvar):
 			elif vtype.strip() == 'sint32' or vtype.strip() == 'uint32':
 				outputln('lw %s,%s(%s)'%(reg, var.corname, '$zero'))
 			else:
-				throw_error(name)
+				throw_error(get_cur_info() + name)
 				rassignr(reg, '$zero')
 			pass
 	elif tp == 'port':
@@ -879,11 +917,12 @@ def assignr(x , reg, prefuncname, corvar):
 			outputln('lw %s,0(%s)'%(reg, '$t0'))
 
 	else:
-		throw_error(x[0])
+		throw_error(get_cur_info() + x[0])
 		rassignr(reg, '$zero')
-	pass
+	return True
 
 
+#save the value in reg to the (name,tp,vtype)
 #@return  vtype of the ans
 def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 	#x : (name, tp, vtype)  tp must in ['array'(a[num]) ,  'variable', 'port']
@@ -896,7 +935,7 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		var = corvar[name]
 		realName = var.corname
 		if var.type == 0:
-			rassignrWithType(var.corname, reg, var.vtype, regvtype)
+			rassignrWithStyle(var.corname, reg, var.vtype, regvtype)
 		elif var.type == 1:
 			saveToArrayInData(reg, var.corname, var.vtype, 0)
 		else:
@@ -1216,6 +1255,9 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 
 def dealExpression(exp, saveto, prefuncname, corvar):
+	#18
+	print 'exp:',exp
+
 	parts = toParts(exp, prefuncname, corvar)
 	
 	suffix = midToSuffix(parts)
@@ -1230,35 +1272,41 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 	stack = []
 	failFlag = 0
 	for i,tp,vtype in suffix:
+		print 'i,tp,vtype:',i,tp,vtype
 		if tp == 'function' or tp == 'array' or tp == 'const' or tp == 'variable' or tp == 'port':
 			stack.append((i,tp,vtype))
 		elif tp == 'symbol' and operation_units[i] == 2:
 			r = stack.pop()
+			l = stack.pop()
+			print 'r:',r
+			print 'l:',l
+
 			rs = '$a3'
 			if r[1] == 'register': ##if the tp is register, it must be a value calculated and pushed before
 									##but the value in reg may be replaced, so we must pop from stack to get the value
 				outputln('POP ' + rs)
 			else:
 				if not assignr(r,rs,prefuncname, corvar):
-					failFlag = throw_error(exp)
+					print 'error: if not assignr(r,rs,prefuncname, corvar):'
+					failFlag = throw_error(get_cur_info() + exp)
 					break
+
 
 			if i in assign_operation:
 				ansvtype = rassign((rs, r[2]), l, prefuncname, corvar)
 				if ansvtype == '':
-					failFlag = throw_error(exp)
+					failFlag = throw_error(get_cur_info() + exp)
 					break
 				if not rassignrWithStyle(saveto, rs, l[2], r[2]):
-					failFlag = throw_error(exp)
+					failFlag = throw_error(get_cur_info() + exp)
 					break
 			else:
-				l = stack.pop()
 				ls = '$a2'
 				if l[1] == 'register':
 					outputln('POP ' + ls)
 				else:
 					if not assignr(l,ls,prefuncname, corvar):
-						failFlag = throw_error(exp)
+						failFlag = throw_error(get_cur_info() + exp)
 						break
 				ansvtype = calc2((ls,l[2]),i,(rs,r[2]),saveto) ##这样是无法写回数据的. 只能把右值assign给寄存器. 左值不行
 			
@@ -1275,7 +1323,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 			stack.append((saveto,'register',ansvtype))
 			outputln('PUSH ' + saveto)
 		else:
-			failFlag = throw_error(exp)
+			failFlag = throw_error(get_cur_info() + exp)
 			break
 
 	
@@ -1514,3 +1562,9 @@ for f in functions:
 		print var.corname,var.type,var.vtype
 
 
+for i in error_strings:
+	errorlog.write(str(find_in_raw_code(i)) + ' : ' + i + '\n')
+errorlog.flush()
+
+outputcode.close()
+errorlog.close()
