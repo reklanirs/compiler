@@ -1240,7 +1240,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 		return 'sint32'		
 	elif oper == '!=':
 		calc2((regl,lvtype), '==', (regr,rvtype), savereg)
-		outputln('xor %s,%s,1'%(savereg))
+		outputln('xor %s,%s,1'%(savereg,savereg))
 		return 'sint32'
 	elif oper =='&':
 		outputln('and %s,%s,%s'%(savereg,regl,regr))
@@ -1573,7 +1573,7 @@ for f in functions:
 	f.printcode()
 	print ''
 
-outputln('END:')
+outputln('\nEND:')
 outputln('END START')
 
 for f in functions:
