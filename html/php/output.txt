@@ -1,0 +1,13 @@
+main
+a # variable # sint32
+0 # const # sint32
+= # symbol # NoVtype
+
+
+assignr  ('0', 'const', 'sint32') $a3
+0 # const # sint32
+
+
+assignr  ('0', 'const', 'sint32') $v0
+
+main

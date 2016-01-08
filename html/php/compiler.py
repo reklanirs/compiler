@@ -1501,7 +1501,7 @@ for f in functions:
 	print ''
 
 outputln('END:')
-outputln('ENDSTART')
+outputln('END START')
 
 for f in functions:
 	print f.name
