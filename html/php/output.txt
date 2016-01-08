@@ -1,13 +1,23 @@
 main
+a:$s0
+
+exp: a=0
 a # variable # sint32
 0 # const # sint32
 = # symbol # NoVtype
 
 
+i,tp,vtype: a variable sint32
+i,tp,vtype: 0 const sint32
+i,tp,vtype: = symbol NoVtype
+r: ('0', 'const', 'sint32')
+l: ('a', 'variable', 'sint32')
 assignr  ('0', 'const', 'sint32') $a3
+exp: 0
 0 # const # sint32
 
 
+i,tp,vtype: 0 const sint32
 assignr  ('0', 'const', 'sint32') $v0
 
 main
