@@ -1,7 +1,8 @@
 .stack
 .data
 Global .word 0
-main .word 0
+main .word 16
+main_c .word 0 0 0 0
 
 
 .code
@@ -17,7 +18,14 @@ PUSH $v1
 POP $a3
 ori $s0,$a3,0
 ori $v1,$a3,0
-ori $v0,$s0,0
+PUSH $v1
+POP $v1
+ori $a3,$s0,0
+ori $s1,$a3,0
+ori $v1,$a3,0
+PUSH $v1
+POP $v1
+ori $v0,$zero,0
 jr $ra
 ori $v0,$zero,0
 jr $ra
