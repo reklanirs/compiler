@@ -1,42 +1,43 @@
-sum
 main
-a:$s2
-c:$s0
-b:$s1
+init functino main
+f.varlist size:1, numdict size:1
+f.vardict size:1
 
-exp: c=a b
-c # variable # sint32
+
+Begin##################################### main
+self.name =  main
+self.vtype =  sint32
+self.params =  []
+main vardict len:1
+main availableVars num: 1
+vars a -- $s0
+a:$s0
+
+dealExpression: a=0
+parts: [('a', 'variable', 'sint32'), ('=', 'symbol', 'NoVtype'), ('0', 'const', 'sint32')]
 a # variable # sint32
-b # variable # sint32
+0 # const # sint32
 = # symbol # NoVtype
 
 
-i,tp,vtype: c variable sint32
+dealE begin: a=0
 i,tp,vtype: a variable sint32
-i,tp,vtype: b variable sint32
+i,tp,vtype: 0 const sint32
 i,tp,vtype: = symbol NoVtype
-r: ('b', 'variable', 'sint32')
+r: ('0', 'const', 'sint32')
 l: ('a', 'variable', 'sint32')
-assignr  ('b', 'variable', 'sint32') $a3
-assignr  ('c', 'variable', 'sint32') $v1
-exp: 0
+assignr  ('0', 'const', 'sint32') $a3
+dealE end len:1
+dealExpression: 0
+parts: [('0', 'const', 'sint32')]
 0 # const # sint32
 
 
+dealE begin: 0
 i,tp,vtype: 0 const sint32
+dealE end len:1
 assignr  ('0', 'const', 'sint32') $v0
 
-c:main_c
+End##################################### main
 
-exp: c[0]=1
-c[0] # array # c
-1 # const # sint32
-= # symbol # NoVtype
-
-
-i,tp,vtype: c[0] array c
-i,tp,vtype: 1 const sint32
-i,tp,vtype: = symbol NoVtype
-r: ('1', 'const', 'sint32')
-l: ('c[0]', 'array', 'c')
-assignr  ('1', 'const', 'sint32') $a3
+main

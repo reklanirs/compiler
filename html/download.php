@@ -1,12 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN" >
+
+<head>
+
+<meta charset="utf-8">
+
+</head>
 <?php
-	$file_name = "coe.zip";     //下载文件名  
+	
+	$mycount = fopen("php/count.txt","r")or die("Unable to open file!");
+	$count = fread($mycount,filesize("php/count.txt"));
+	fclose($mycount);
+	
+	$mycount = fopen("php/count.txt","w")or die("Unable to open file!");
+	fwrite($mycount,$count+1);
+	fclose($mycount);
+	
+	$file_name = "coe".$count.".zip";     //下载文件名  
 	$file_dir = "./php/";        //下载文件存放目录  
+	
 	//检查文件是否存在  
 	if (! file_exists ( $file_dir . $file_name )) {  
-		echo "文件找不到";  
+		echo "文件找不到";
 		exit ();  
-	} else {  
+	} else {
 		//打开文件  
+		echo $file_name;
+		echo $file_dir;
 		$file = fopen ( $file_dir . $file_name, "r" );  
 		//输入文件标签   
 		Header ( "Content-type: application/octet-stream" );  
