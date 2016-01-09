@@ -1348,6 +1348,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 			failFlag = throw_error(get_cur_info() + exp)
 			break
 
+
 	print 'dealE end len:%d'%(len(stack))
 
 	if not failFlag:
