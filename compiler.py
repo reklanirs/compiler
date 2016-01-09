@@ -950,6 +950,8 @@ def extractPort(_s):
 		s = s[1:]
 	if s[:4] == 'ffff' or s[:4] == 'FFFF':
 		s = s[4:]
+	if s[-1]!='h' and s[-1]!='H':
+		s = s + 'h'
 	return s
 	pass
 
