@@ -927,17 +927,31 @@ def assignr(x , reg, prefuncname, corvar):
 				rassignr(reg, '$zero')
 			pass
 	elif tp == 'port':
-		var = corvar[name]
-		if var.type == 0:
-			outputln('lw %s,0(%s)'%(reg,var.corname))
-		elif var.type == 1:
-			outputln('lw $t0,%s($zero)'%(var.corname))
-			outputln('lw %s,0(%s)'%(reg, '$t0'))
+		# var = corvar[name]
+		# if var.type == 0:
+		# 	outputln('lw %s,0(%s)'%(reg,var.corname))
+		# elif var.type == 1:
+		# 	outputln('lw $t0,%s($zero)'%(var.corname))
+		# 	outputln('lw %s,0(%s)'%(reg, '$t0'))
+		outputln('lw %s,%s($zero)'%(reg,extractPort(name)))
 
 	else:
 		throw_error(get_cur_info() + x[0])
 		rassignr(reg, '$zero')
 	return True
+
+
+
+def extractPort(_s):
+	s = _s
+	if s[:2] == '0x':
+		s = s[2:]
+	if s[0] == '0':
+		s = s[1:]
+	if s[:4] == 'ffff' or s[:4] == 'FFFF':
+		s = s[4:]
+	return s
+	pass
 
 
 #save the value in reg to the (name,tp,vtype)
@@ -959,12 +973,13 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		else:
 			return ''
 	elif tp == 'port': ##
-		var = corvar[name]
-		if var.type == 0:
-			outputln('sw %s,0(%s)'%(reg,var.corname))
-		elif var.type == 1:
-			outputln('lw $t0,%s($zero)'%(var.corname))
-			outputln('sw %s,0(%s)'%(reg, '$t0'))
+		# var = corvar[name]
+		# if var.type == 0:
+		# 	outputln('sw %s,0(%s)'%(reg,var.corname))
+		# elif var.type == 1:
+		# 	outputln('lw $t0,%s($zero)'%(var.corname))
+		# 	outputln('sw %s,0(%s)'%(reg, '$t0'))
+		outputln('sw %s,%s($zero)'%(reg,extractPort(name)))
 	else:
 		return ''
 	return vtype
@@ -987,6 +1002,8 @@ def calc1((reg,vtype), oper, savereg):
 		outputln('nor %s,%s,%s'%(savereg,reg,reg))
 		outputln('addi %s,%s,1'%(savereg,savereg))
 		regFormat(savereg, ansvtype)
+	elif oper == '$':
+		pass
 	else:
 		rassignr(savereg,'$zero')
 		ansvtype = ''
@@ -1285,6 +1302,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 	if len(suffix) == 0:
 		print 'NoSuffix'
 	for i in suffix:
+		print 'suffix:'
 		print i[0],'#',i[1],'#',i[2]
 	print '\n'
 
@@ -1334,6 +1352,11 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 
 			stack.append((saveto,'register',ansvtype))
 			outputln('PUSH ' + saveto)
+		elif i == '$':
+			l = stack.pop()
+			print '$l:',l
+			stack.append((l[0],'port',l[2]))
+			pass
 		elif tp == 'symbol' and operation_units[i] == 1:
 			l = stack.pop()
 			ls = '$a2'
@@ -1341,6 +1364,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 				outputln('POP ' + ls)
 			else:
 				assignr(l,ls,prefuncname, corvar)
+			print 'calc1:',ls,l[2],i,saveto	
 			ansvtype = calc1((ls,l[2]),i,saveto)
 			stack.append((saveto,'register',ansvtype))
 			outputln('PUSH ' + saveto)
