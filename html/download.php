@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="zh-CN" >
-
-<head>
-
-<meta charset="utf-8">
-
-</head>
 <?php
 	
 	$mycount = fopen("php/count.txt","r")or die("Unable to open file!");
@@ -24,9 +16,7 @@
 		echo "文件找不到";
 		exit ();  
 	} else {
-		//打开文件  
-		echo $file_name;
-		echo $file_dir;
+		//打开文件
 		$file = fopen ( $file_dir . $file_name, "r" );  
 		//输入文件标签   
 		Header ( "Content-type: application/octet-stream" );  

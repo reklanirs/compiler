@@ -15,5 +15,6 @@
 		$count = fread($mycount,filesize("count.txt"));
 		fclose($mycount);
 		system("7z a -tzip coe".$count.".zip output/");
+		exit();
     }
 ?>
