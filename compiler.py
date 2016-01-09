@@ -198,7 +198,7 @@ class Function(object):
 				self.realcode = codes[i:-1]
 				break
 	def printcode(self):
-		outputln(self.name + '_begin:')
+		outputln('\n' + self.name + '_begin:')
 		availableVars = self.vardict.copy()
 		for i,j in globalVarDict.items():
 			if i not in self.vardict:
@@ -860,7 +860,7 @@ def assignr(x , reg, prefuncname, corvar):
 				elif var.type == 1:
 					saveToArrayInData('$a0', aimRealName, aimVarType, 0)
 		#函数执行
-		outputln('jal ' + funcName)
+		outputln('jal ' + funcName + '_begin')
 		#执行结束, 结果存于$v0
 
 		outputln('POPA ##' + prefuncname) #PUSHA, POPA操作不能动$v的值
