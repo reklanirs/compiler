@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<!--设置字符渲染,防止乱码-->
+
+	<meta name="keywords" content="gui,2015-10-21,html">
+	<meta name="author" content="tang zhihao">
+	<meta name="generator" content="notepad++ 6.7.9">
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<link rel="shortcut icon" href="https://www.bing.com/s/a/bing_p.ico" type="image/x-icon" />
+	<!--加图标-->
+	<title>GUI v0.1</title>
+	<style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+    }
+	
+	.footer {
+	text-align: center;
+	font-family:'微软雅黑';
+	  line-height: 40px;
+	  padding-bottom: 10px;
+	  margin-top: 40px;
+	}
+    #editor {
+		width: 80%;
+        margin: 0;
+        position: absolute;
+        top: 100px;
+        bottom: 0px;
+        left: 0;
+    }
+	</style>
+</head>
+<body>
+
+<div id="editor">int main(void){
+ int a;
+ a=0;
+ return 0;
+}
+</div>
+
+
+<script src="js/jquery-1.11.3.min.js">
+</script>
+<script src="js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/chrome");
+    editor.session.setMode("ace/mode/c_cpp");
+	
+	function createXmlHttp() {  
+		var xmlHttp = null;  
+		   
+		try {  
+			//Firefox, Opera 8.0+, Safari  
+			xmlHttp = new XMLHttpRequest();  
+		} catch (e) {  
+			//IE  
+			try {  
+				xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");  
+			} catch (e) {  
+				xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");  
+			}  
+		}
+		return xmlHttp;  
+	}
+	
+	function submitcode(){
+		var codes={};
+		codes=window.editor.session;
+		
+		var xmlHttp = createXmlHttp();  
+		if(!xmlHttp) {  
+			alert("您的浏览器不支持AJAX！");  
+			return 0;  
+		}  
+		var url = 'php/code.php';
+		if(window.changebtn.value=="ASM!"){
+			url = 'php/asm.php';
+		}
+		  
+		var postData = "";  
+		postData = "code=" + codes;
+		  
+		xmlHttp.open("POST", url, true);  
+		xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");  
+		xmlHttp.onreadystatechange = function() {  
+			if(xmlHttp.readyState == 4 && xmlHttp.status == 200) {  
+				if(xmlHttp.responseText == '1') {  
+					alert('post successed');  
+				}  
+			}  
+		}  
+		xmlHttp.send(postData);
+		
+		alert("下载将在3秒后开始！");
+		setTimeout("download()",5000);
+	}
+	
+	function download(){
+		window.location.replace("download.php");
+	}
+	
+	function changecode(){
+		var btnstr = window.changebtn.value;
+		if(btnstr=="MiniC!"){
+			window.changebtn.value="ASM!"
+			editor.session.setMode("ace/mode/assembly_x86");
+		}
+		else{
+			window.changebtn.value="MiniC!"
+			editor.session.setMode("ace/mode/c_cpp");
+		}
+	}
+	
+	function resetcode(){
+		window.editor.setValue("");
+	}
+	
+</script>
+
+
+
+<!-- <div>
+<form enctype="multipart/form-data" action="php/upload.php" method="post">
+<label for="main picture">上传bit流文件:</label>
+<input type="file" id="mainPic" name="mainPic"/>
+<br/>
+<input type="submit">
+<input type="reset">
+</form>
+</div> -->
+
+<hr/>
+<div>
+<input id="submitbtn" type="button" value="SubmitCode" onclick="submitcode()">
+<input id="emptybtn" type="button" value="EmptyCode" onclick="resetcode()">
+<input id="changebtn" type="button" value="MiniC!" onclick="changecode()">
+</div>
+<p id="footer">Copyright © 2015 
+<a href="https://github.com/reklanirs/compiler">Github</a>
+</p>
+</body>
+</html>

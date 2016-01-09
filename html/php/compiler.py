@@ -201,12 +201,22 @@ class Function(object):
 		outputln(self.name + '_begin:')
 		availableVars = self.vardict.copy()
 		for i,j in globalVarDict.items():
-			if i not in self.varlist:
+			if i not in self.vardict:
 				availableVars[i] = j
 
+		print '\nBegin##################################### ' + self.name
+		print 'self.name = ',self.name
+		print 'self.vtype = ',self.codes[0][:6]  #variable_types = ['void00','sint08','sint16','sint32','uint08','uint16','uint32']
+		print 'self.params = ',self.params
+		self.sizeof = int(self.vtype[4:6])  # 8, 16, 32
+		print '%s vardict len:%d'%(self.name,len(self.vardict))
+		print '%s availableVars num: %d'%(self.name,len(availableVars))
+		for i,j in availableVars.items():
+			print 'vars %s -- %s'%(i,j.corname)
 		dealCodes(self.name, self.realcode, availableVars, 0)
 		rassignr('$v0', '$zero')
 		outputln('jr $ra')
+		print '\nEnd##################################### ' + self.name
 
 
 
@@ -623,7 +633,7 @@ def readapart(s, prefuncname, corvar):
 				return '','','NoType','NoVtype'
 			else:
 				return vname,s[tmp:].strip(),'variable',corvar[vname].vtype
-	elif s[0] in '+-*/=<>!&|^~$':
+	elif s[0] in '+-*/=<>!&|^~$%':
 		i = 0
 		while i < len(s) and s[:i+1] in priority:
 			i += 1
@@ -1196,11 +1206,11 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 		return 'sint32'
 	elif oper == '<=':
 		calc2((regl,lvtype), '>', (regr,rvtype), savereg)
-		outputln('xor %s,%s,1'%(savereg))
+		outputln('xor %s,%s,1'%(savereg,savereg))
 		return 'sint32'
 	elif oper == '>=':
 		calc2((regl,lvtype), '<', (regr,rvtype), savereg)
-		outputln('xor %s,%s,1'%(savereg))
+		outputln('xor %s,%s,1'%(savereg,savereg))
 		return 'sint32'
 	elif oper == '==':
 		if lvtype[0] == rvtype[0]:
@@ -1230,7 +1240,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 		return 'sint32'		
 	elif oper == '!=':
 		calc2((regl,lvtype), '==', (regr,rvtype), savereg)
-		outputln('xor %s,%s,1'%(savereg))
+		outputln('xor %s,%s,1'%(savereg,savereg))
 		return 'sint32'
 	elif oper =='&':
 		outputln('and %s,%s,%s'%(savereg,regl,regr))
@@ -1256,13 +1266,16 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 def dealExpression(exp, saveto, prefuncname, corvar):
 	#18
-	print 'exp:',exp
+	print 'dealExpression:',exp
 
 	parts = toParts(exp, prefuncname, corvar)
 	
+	print 'parts:',parts
 	suffix = midToSuffix(parts)
 	ansvtype = ''
 
+	if len(suffix) == 0:
+		print 'NoSuffix'
 	for i in suffix:
 		print i[0],'#',i[1],'#',i[2]
 	print '\n'
@@ -1271,6 +1284,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 
 	stack = []
 	failFlag = 0
+	print 'dealE begin: ' + exp
 	for i,tp,vtype in suffix:
 		print 'i,tp,vtype:',i,tp,vtype
 		if tp == 'function' or tp == 'array' or tp == 'const' or tp == 'variable' or tp == 'port':
@@ -1326,8 +1340,13 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 			failFlag = throw_error(get_cur_info() + exp)
 			break
 
-	
+	print 'dealE end len:%d'%(len(stack))
+
 	if not failFlag:
+		if len(stack) == 0:
+			for i,j in corvar.items():
+				print 'i,j:',i,j.corname
+			print 'exp:',exp
 		i,tp,vtype = stack[0]
 		if tp == 'register':
 			outputln('POP ' + saveto)
@@ -1490,7 +1509,9 @@ for s in tmp:
 """"""""""""""""""""" 全局变量输出完毕 """""""""""""""""""""
 
 for f in functions:
+	print 'init functino %s'%(f.name)
 	f.varlist,numdict,arraylist = scanVarible([f.head] + f.vardeclaration, f.realcode)
+	print 'f.varlist size:%d, numdict size:%d'%(len(f.varlist),len(numdict))
 
 	for array,tp in arraylist:
 		name = array[:array.find('[')].strip()
@@ -1533,6 +1554,9 @@ for f in functions:
 		outputln(s)
 	outputln('')
 
+	print 'f.vardict size:%d\n'%(len(f.vardict))
+
+
 """"""""""""""""""""""""""""""""" .DATA输出结束 """""""""""""""""""""""""""""""""
 
 
@@ -1542,13 +1566,14 @@ for f in functions:
 outputln('\n.code')
 outputln('START:')
 outputln('addi $ra,$zero,END')
+outputln('addi $29,$0,4000H')
 outputln('j main_begin\n')
 
 for f in functions:
 	f.printcode()
 	print ''
 
-outputln('END:')
+outputln('\nEND:')
 outputln('END START')
 
 for f in functions:

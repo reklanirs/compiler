@@ -1,6 +1,17 @@
+void00 sum(sint32 a,sint32 b)
+{
+sint32 c
+c=a b
+return 0
+}
 sint32 main(void00)
 {
-sint32 a
-a=0
+sint32 c[2]
+c[0]=1
+c[1]=2
+sint32 a=1
+sint32 b=2
+sum(a,b)
+sint32 m=9
 return 0
 }

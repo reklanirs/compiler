@@ -6,7 +6,7 @@
 		fclose($myfile);
 		
 		system("CPU.exe");
-		
+		sleep(1);
 		system("7z a -tzip coe.zip output/");
     }
 ?>

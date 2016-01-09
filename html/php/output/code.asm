@@ -11,7 +11,7 @@ onezero .byte F0H,10H,EEH
 
 .code
 START:
-	addi $ra,$zero,END
+	addi $ra,$zero,test
 	lw $t0,one($zero) #$t0:1H
 	add $t0,$t0,$t0
 	lhu $t1,fono($zero) #$t1:F101H
@@ -25,13 +25,18 @@ START:
 	sub $s3,$t3,$t2
 	subu $s4,$t2,$t3
 	lw $t6,onezero($t0)
-	add $t0,$t0,$t0 #t0:2H
+	add $t0,$t0,$t0 #t0:4H
 	mult $t2,$t3
-	mflo $s5	#s5:FFFFF0F1H
-	mfhi $s6	#s6:EFF0H
+	mflo $s5	#s5:
+	mfhi $s6	#s6:
+	sw $t6,FC60H($zero)
+	sw $s5,one($zero)
 	add $s5,$s5,$s6
+	lw $3,one($zero)
+	
 	mthi $s5
-	mtlo $s6
+	mfhi $s6
+	add $s5,$s5,$s6
 	multu $t2,$t3
 	mflo $s5	
 	mfhi $s6	
@@ -41,12 +46,13 @@ START:
 	divu $t2,$t3
 	mflo $s5	
 	mfhi $s6
+test:	
 	or $s7,$t2,$t3
 	xor $s6,$t2,$t3
 	nor $s5,$t2,$t3
 	slt $s4,$t2,$t3
 	sll $s4,$s4,5
-	sltu $s4,$t2,$t3
+	sltu $s5,$t2,$t3
 	sllv $s4,$s4,$t0
 	sra $s4,$t3,2
 	srav $s4,$t3,$t0
