@@ -65,7 +65,7 @@ error_strings = []
 outputcode = open('code.asm','w')
 errorlog = open('error.txt','w')
 
-prefix_global = 'Global_'		
+prefix_global = 'Global_'
 globalVarList = []
 globalVarDict = {}
 globalArray = []
@@ -73,11 +73,12 @@ globalCodes = []
 
 functionNameList = []
 functionDict = {}
-functionReturnType = {}	
+functionReturnType = {}
 functions = []
 
 def swap(a,b):
 	return b,a
+
 
 def get_cur_info():
     """Return the frame object for the caller's stack frame."""
@@ -128,7 +129,7 @@ class Variable(object):
 		self.name = name #name in function
 		self.vtype = vartp  #variable_types = ['sint08','sint16','sint32','uint08','uint16','uint32']
 		self.sizeof = int(vartp[4:6])  # 8, 16, 32
-		
+
 		self.corname = '' # name in .code or register name
 		self.type = 0    # 0 : register;   1 : RAM单独变量  n(>1):数组,占n单元
 
@@ -184,7 +185,7 @@ class Function(object):
 				name = x[6:].strip()
 				if name.find('[') != -1:
 					name = name[:name.find('[')].strip()
-				self.params.append((name,tp))	
+				self.params.append((name,tp))
 
 		self.head = codes[0]
 		self.vardeclaration = []
@@ -198,7 +199,7 @@ class Function(object):
 				self.realcode = codes[i:-1]
 				break
 	def printcode(self):
-		outputln('\n' + self.name + '_begin:')
+		outputln('\n\n' + self.name + '_begin:')
 		availableVars = self.vardict.copy()
 		for i,j in globalVarDict.items():
 			if i not in self.vardict:
@@ -436,7 +437,7 @@ def findCurlyContent(codes):
 				return codes[start + 1:end],end
 		end += 1
 	return codes[start + 1:],len(codes) - 1
-	pass			
+	pass
 
 
 
@@ -446,7 +447,7 @@ def scanVarible(codes, allcodes):
 	variables = []
 	appearNum = {}
 	array = []
-	
+
 	l = []
 	if len(codes) == 0:
 		return variables,appearNum,array
@@ -514,6 +515,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 
 	dealedLineNum = -1
 	for linenum in range(len(codes)):
+		outputln('')
 		if linenum <= dealedLineNum:
 			continue
 		s = codes[linenum].strip()
@@ -599,7 +601,7 @@ def dealCodes(funcname, codes, corvar, loopnum):
 #@return  (a_part, left_string, part_type,  part_vtype)
 def readapart(s, prefuncname, corvar):
 	s = s.strip()
-	if s == '' or s == '(' or s == ')':
+	if s == '' or s[0] == '(' or s[0] == ')':
 		return s[0:1].strip(),s[1:].strip(),'parenthesis','NoVtype'
 	if re.match('[0-9]+\\b|0x[0-9a-fA-F]+\\b',s):
 		tmp = re.match('[-+]?[0-9]+\\b|[-+]?0x[0-9a-fA-F]+\\b',s).span()[1]
@@ -749,7 +751,11 @@ def rassignr(regto, regfrom):
 #@return  successful
 def rassignrWithStyle(regto, regfrom, toVstyle = 'sint32', fromVstyle = 'sint32'):
 	#variable_types = ['sint08','sint16','sint32','uint08','uint16','uint32']
+	print 'rassignrWithStyle:',regto,regfrom,toVstyle,fromVstyle
 	if regto not in register_name or regfrom not in register_name or toVstyle not in variable_types or fromVstyle not in variable_types:
+		print register_name
+		print variable_types
+		print 'rassignrWithStyle Failed'
 		return False
 	tosize = int(toVstyle[-2:])
 	fromsize = int(fromVstyle[-2:])
@@ -828,7 +834,7 @@ def assignr(x , reg, prefuncname, corvar):
 			params = []
 		else:
 			params = [x.strip() for x in params.split(',')]
-		
+
 		if len(params) != len(functionDict[funcName].params):
 			throw_error(get_cur_info() + x)
 			return False
@@ -855,10 +861,12 @@ def assignr(x , reg, prefuncname, corvar):
 			else: ##aim 必定是0 - reg, 1 - 内存的单个变量两种形式;
 				ansvtype = dealExpression(here, '$a0', prefuncname, corvar)
 				var = f.vardict[aimName]
+				print 'func: aimName:' + aimName,'var:'+aimRealName, ansvtype
 				if var.type == 0:
 					rassignrWithStyle(aimRealName, '$a0', var.vtype, ansvtype)
 				elif var.type == 1:
 					saveToArrayInData('$a0', aimRealName, aimVarType, 0)
+				print 'func:var assign end'
 		#函数执行
 		outputln('jal ' + funcName + '_begin')
 		#执行结束, 结果存于$v0
@@ -1159,7 +1167,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 			outputln('srlv %s,%s,%s'%(savereg,regl,regr))
 		if lvtype[0] == 's':
 			outputln('srav %s,%s,%s'%(savereg,regl,regr))
-		return lvtype 
+		return lvtype
 	elif oper == '<':
 		if lvtype[0] == 'u' and rvtype[0] == 'u':
 			outputln('sltu %s,%s,%s'%(savereg, regl, regr))
@@ -1181,7 +1189,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 			outputln('blez $zero,1')
 			#s<0
 			outputln('ori %s,$zero,0'%(savereg))
-		return 'sint32'	
+		return 'sint32'
 	elif oper == '>':
 		if lvtype[0] == 'u' and rvtype[0] == 'u':
 			outputln('sltu %s,%s,%s'%(savereg, regr, regl))
@@ -1237,7 +1245,7 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 			outputln('blez $zero,1')
 			#s为负
 			outputln('ori %s,$zero,0'%(savereg))
-		return 'sint32'		
+		return 'sint32'
 	elif oper == '!=':
 		calc2((regl,lvtype), '==', (regr,rvtype), savereg)
 		outputln('xor %s,%s,1'%(savereg,savereg))
@@ -1269,7 +1277,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 	print 'dealExpression:',exp
 
 	parts = toParts(exp, prefuncname, corvar)
-	
+
 	print 'parts:',parts
 	suffix = midToSuffix(parts)
 	ansvtype = ''
@@ -1279,7 +1287,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 	for i in suffix:
 		print i[0],'#',i[1],'#',i[2]
 	print '\n'
-	
+
 	##calc mid and save to saveto
 
 	stack = []
@@ -1323,7 +1331,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 						failFlag = throw_error(get_cur_info() + exp)
 						break
 				ansvtype = calc2((ls,l[2]),i,(rs,r[2]),saveto) ##这样是无法写回数据的. 只能把右值assign给寄存器. 左值不行
-			
+
 			stack.append((saveto,'register',ansvtype))
 			outputln('PUSH ' + saveto)
 		elif tp == 'symbol' and operation_units[i] == 1:
@@ -1347,16 +1355,19 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 			for i,j in corvar.items():
 				print 'i,j:',i,j.corname
 			print 'exp:',exp
+		print 'stack[0]:',stack[0]
 		i,tp,vtype = stack[0]
+
 		if tp == 'register':
 			outputln('POP ' + saveto)
 		else:
 			assignr(stack[0], saveto, prefuncname, corvar)
+		return stack[0][2]
 	else:
 		for i in stack:
 			if i[1] == 'register':
 				outputln('POP $t0')
-		return '$zero','NoType','NoVtype'
+		return 'NoVtype'
 
 
 
