@@ -933,7 +933,10 @@ def assignr(x , reg, prefuncname, corvar):
 		# elif var.type == 1:
 		# 	outputln('lw $t0,%s($zero)'%(var.corname))
 		# 	outputln('lw %s,0(%s)'%(reg, '$t0'))
-		outputln('lw %s,%s($zero)'%(reg,extractPort(name)))
+		
+		#2outputln('lw %s,%s($zero)'%(reg,extractPort(name)))
+
+		outputln('lw %s,0(%s)'%(reg,name))
 
 	else:
 		throw_error(get_cur_info() + x[0])
@@ -981,7 +984,10 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		# elif var.type == 1:
 		# 	outputln('lw $t0,%s($zero)'%(var.corname))
 		# 	outputln('sw %s,0(%s)'%(reg, '$t0'))
-		outputln('sw %s,%s($zero)'%(reg,extractPort(name)))
+		
+		#2outputln('sw %s,%s($zero)'%(reg,extractPort(name)))
+
+		outputln('sw %s,0(%s)'%(reg,name))
 	else:
 		return ''
 	return vtype
@@ -1355,9 +1361,16 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 			stack.append((saveto,'register',ansvtype))
 			outputln('PUSH ' + saveto)
 		elif i == '$':
+			#需要把所有指针类型转成对register的解析
 			l = stack.pop()
 			print '$l:',l
-			stack.append((l[0],'port',l[2]))
+			if l[1] == 'const':
+				if not assignr(l,saveto,prefuncname,corvar):
+					failFlag = throw_error(get_cur_info() + exp)
+					print get_cur_info() + 'pointer: const to reg failed'
+				pass
+			outputln('PUSH ' + saveto)
+			stack.append((saveto,'port','sint32'))
 			pass
 		elif tp == 'symbol' and operation_units[i] == 1:
 			l = stack.pop()
