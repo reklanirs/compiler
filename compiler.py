@@ -627,7 +627,7 @@ def readapart(s, prefuncname, corvar):
 					num -= 1
 					if num == 0:
 						arrayName = s[:tmp].strip()
-						return s[:i+1],s[i+1:].strip(),'array',arrayName
+						return s[:i+1],s[i+1:].strip(),'array',corvar[arrayName].vtype
 		else:
 			vname = s[:tmp].strip()
 			if vname not in corvar:
@@ -725,7 +725,7 @@ def saveToArrayInData(reg, realArrayName, arrayType, i):
 		else:
 			outputln('ori $t0,$zero,%d'%(i))
 			tmpReg = '$t0'
-	elif types(i) == str and i in register_name:
+	elif type(i) == str and i in register_name:
 		tmpReg = i
 
 	if arrayType == 'sint08' or arrayType == 'uint08':
@@ -965,9 +965,9 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 	#x : (name, tp, vtype)  tp must in ['array'(a[num]) ,  'variable', 'port']
 	if tp == 'array':
 		arrayName = name[:name.find('[')].strip()
-		num = num[name.find('[')+1:name.rfind(']')].strip()
+		num = name[name.find('[')+1:name.rfind(']')].strip()
 		dealExpression(num, '$a0', prefuncname, corvar)
-		saveToArrayInData(reg, corvar[name].corname, vtype, '$a0')
+		saveToArrayInData(reg, corvar[arrayName].corname, vtype, '$a0')
 	elif tp == 'variable':
 		var = corvar[name]
 		realName = var.corname
@@ -1303,6 +1303,7 @@ def dealExpression(exp, saveto, prefuncname, corvar):
 
 	parts = toParts(exp, prefuncname, corvar)
 
+	print 'toParts end'
 	print 'parts:',parts
 	suffix = midToSuffix(parts)
 	ansvtype = ''
