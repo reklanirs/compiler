@@ -508,11 +508,6 @@ def scanVarible(codes, allcodes):
 
 def dealCodes(funcname, codes, corvar, loopnum):
 	#throw_error(get_cur_info() + 'dealCodes:'+codes[0])
-	#18
-	for i,j in corvar.items():
-		print i + ':' + j.corname
-	print ''
-
 	dealedLineNum = -1
 	for linenum in range(len(codes)):
 		outputln('')
@@ -645,7 +640,7 @@ def readapart(s, prefuncname, corvar):
 
 
 #@call  string, prefuncname, corvar
-#@return  [(a_part, left_string, part_type,  part_vtype)]
+#@return  [(a_part, part_type, part_vtype)]
 def toParts(s, prefuncname, corvar):
 	ret = []
 	while len(s) > 0:
@@ -935,7 +930,7 @@ def assignr(x , reg, prefuncname, corvar):
 		# 	outputln('lw %s,0(%s)'%(reg, '$t0'))
 		
 		#2outputln('lw %s,%s($zero)'%(reg,extractPort(name)))
-
+		outputln('POP ' + reg)
 		outputln('lw %s,0(%s)'%(reg,name))
 
 	else:
@@ -986,7 +981,7 @@ def rassign((reg,regvtype), (name, tp, vtype) , prefuncname, corvar):
 		# 	outputln('sw %s,0(%s)'%(reg, '$t0'))
 		
 		#2outputln('sw %s,%s($zero)'%(reg,extractPort(name)))
-
+		outputln('POP ' + reg)
 		outputln('sw %s,0(%s)'%(reg,name))
 	else:
 		return ''
@@ -1298,7 +1293,6 @@ def calc2((regl,lvtype), oper, (regr,rvtype), savereg):
 
 
 def dealExpression(exp, saveto, prefuncname, corvar):
-	#18
 	print 'dealExpression:',exp
 
 	parts = toParts(exp, prefuncname, corvar)
@@ -1513,9 +1507,6 @@ if functions[len(functions)-1].name != 'main':
 for f in functions:
 	functionNameList.append(f.name)
 	functionReturnType[f.name] = f.vtype
-functionReturnType['while'] = 'sint32'
-functionReturnType['for'] = 'sint32'
-functionReturnType['if'] = 'sint32'
 
 for f in functions:
 	print f.name
@@ -1530,7 +1521,6 @@ for f in functions:
 """"""""""""""""""""""""""""""""" .DATA输出开始 """""""""""""""""""""""""""""""""
 outputln('.stack')
 outputln('.data')
-
 
 globalVarList,nouse,globalArray = scanVarible(globalCodes, globalCodes)
 for name,tp in globalVarList:
@@ -1627,6 +1617,10 @@ for f in functions:
 
 outputln('\nEND:')
 outputln('END START')
+
+
+
+""""""""""""""""""""""""""""""""" .CODE输出结束 """""""""""""""""""""""""""""""""
 
 for f in functions:
 	print f.name
